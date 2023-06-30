@@ -19,7 +19,7 @@ from sqlalchemy.orm import (
 from sqlalchemy.sql.elements import Null
 
 # Enum
-from query_repository.enum import Operators
+from session_repository.enum import Operators
 
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 

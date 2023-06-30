@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session, InstrumentedAttribute
 
 # UTILS
-from query_repository.utils import (
+from session_repository.utils import (
     _FilterType,
     apply_no_load,
     apply_filters,
