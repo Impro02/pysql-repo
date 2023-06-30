@@ -194,7 +194,6 @@ class SessionRepository:
 
     def _add(
         self,
-        session: Session,
         data,
         flush: bool = False,
         commit: bool = False,
