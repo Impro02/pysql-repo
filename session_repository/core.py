@@ -51,7 +51,7 @@ class SessionRepository:
         filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         current_session: Optional[Session] = None,
-    ) -> Union[Tuple[List[Any], str], List[Any], Any]:
+    ) -> Optional[Any]:
         def _select_from_session(session: Session):
             query = session.query(model)
             query = apply_no_load(query=query, relationship_dict=disabled_relationships)
