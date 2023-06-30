@@ -98,14 +98,28 @@ class SessionRepository:
     ) -> Union[Tuple[List[Any], str], List[Any]]:
         def _select_from_session(session: Session):
             query = session.query(model)
-            query = apply_no_load(query=query, relationship_dict=disabled_relationships)
-            query = apply_filters(query=query, filter_dict=filters)
-            query = apply_order_by(
-                query=query, model=model, order_by=order_by, direction=direction
+            query = apply_no_load(
+                query=query,
+                relationship_dict=disabled_relationships,
             )
-            query = apply_limit(query=query, limit=limit)
+            query = apply_filters(
+                query=query,
+                filter_dict=filters,
+            )
+            query = apply_order_by(
+                query=query,
+                model=model,
+                order_by=order_by,
+                direction=direction,
+            )
+            query = apply_limit(
+                query=query,
+                limit=limit,
+            )
             query, pagination = apply_pagination(
-                query=query, page=page, per_page=per_page
+                query=query,
+                page=page,
+                per_page=per_page,
             )
 
             results = query.all()
@@ -148,7 +162,7 @@ class SessionRepository:
         current_session: Optional[Session] = None,
     ):
         def _update_from_session(session: Session):
-            rows = self._select(
+            rows = self._select_all(
                 model=model,
                 filters=filters,
                 current_session=session,
@@ -214,8 +228,10 @@ class SessionRepository:
         current_session: Optional[Session] = None,
     ) -> bool:
         def _delete_from_session(session: Session):
-            rows: List[BaseModel] = self._select(
-                model=model, filters=filters, current_session=session
+            rows: List[BaseModel] = self._select_all(
+                model=model,
+                filters=filters,
+                current_session=session,
             )
 
             if len(rows) == 0:
