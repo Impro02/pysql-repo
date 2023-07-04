@@ -8,8 +8,6 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Type,
-    TypeVar,
     Union,
 )
 
@@ -30,9 +28,6 @@ from session_repository.utils import (
 )
 
 
-T = TypeVar("T", bound=BaseModel)
-
-
 class SessionRepository:
     def __init__(
         self,
@@ -44,19 +39,22 @@ class SessionRepository:
         self._logger = logger
         self._literal_binds = literal_binds
 
+    @property
+    def session_manager(self):
+        return self._session_factory()
+
     def _select(
         self,
         model,
-        model_returned: Optional[Type[T]] = None,
         filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         current_session: Optional[Session] = None,
-    ) -> Optional[T]:
+    ) -> Optional[Any]:
         def _select_from_session(session: Session):
             query = session.query(model)
             query = apply_no_load(query=query, relationship_dict=disabled_relationships)
             query = apply_filters(query=query, filter_dict=filters)
-            results = query.first()
+            result = query.first()
 
             if self._logger is not None:
                 query_compiled = query.statement.compile(
@@ -64,16 +62,7 @@ class SessionRepository:
                 )
                 self._logger.info(query_compiled.string)
 
-            if results is None:
-                return
-
-            mapped_results = (
-                model_returned.from_orm(results)
-                if model_returned is not None
-                else results
-            )
-
-            return mapped_results
+            return result
 
         if current_session is not None:
             results = _select_from_session(session=current_session)
@@ -86,16 +75,64 @@ class SessionRepository:
     def _select_all(
         self,
         model,
-        model_returned: Optional[Type[T]] = None,
         filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
-        page: Optional[int] = None,
-        per_page: Optional[int] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
         current_session: Optional[Session] = None,
-    ) -> Union[Tuple[List[T], str], List[T]]:
+    ) -> List:
+        def _select_from_session(session: Session):
+            query = session.query(model)
+            query = apply_no_load(
+                query=query,
+                relationship_dict=disabled_relationships,
+            )
+            query = apply_filters(
+                query=query,
+                filter_dict=filters,
+            )
+            query = apply_order_by(
+                query=query,
+                model=model,
+                order_by=order_by,
+                direction=direction,
+            )
+            query = apply_limit(
+                query=query,
+                limit=limit,
+            )
+
+            results = query.all()
+
+            if self._logger is not None:
+                query_compiled = query.statement.compile(
+                    compile_kwargs={"literal_binds": self._literal_binds}
+                )
+                self._logger.info(query_compiled.string)
+
+            return results
+
+        if current_session is not None:
+            results = _select_from_session(session=current_session)
+        else:
+            with self._session_factory() as session:
+                results = _select_from_session(session=session)
+
+        return results
+
+    def _select_paginate(
+        self,
+        model,
+        page: int,
+        per_page: int,
+        filters: Optional[_FilterType] = None,
+        disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
+        order_by: Optional[Union[List[str], str]] = None,
+        direction: Optional[str] = None,
+        limit: int = None,
+        current_session: Optional[Session] = None,
+    ) -> Tuple[List, str]:
         def _select_from_session(session: Session):
             query = session.query(model)
             query = apply_no_load(
@@ -130,19 +167,7 @@ class SessionRepository:
                 )
                 self._logger.info(query_compiled.string)
 
-            if results is None:
-                return
-
-            mapped_results = (
-                [model_returned.from_orm(res) for res in results]
-                if model_returned is not None
-                else results
-            )
-
-            if pagination is None:
-                return mapped_results
-
-            return mapped_results, pagination
+            return results, pagination
 
         if current_session is not None:
             results = _select_from_session(session=current_session)
@@ -160,7 +185,7 @@ class SessionRepository:
         flush: bool = False,
         commit: bool = False,
         current_session: Optional[Session] = None,
-    ):
+    ) -> List:
         def _update_from_session(session: Session):
             rows = self._select_all(
                 model=model,
@@ -198,7 +223,7 @@ class SessionRepository:
         flush: bool = False,
         commit: bool = False,
         current_session: Optional[Session] = None,
-    ):
+    ) -> Union[List, Any]:
         def _add_from_session(session: Session):
             session.add_all(data) if isinstance(data, list) else session.add(data)
             if flush:
@@ -206,7 +231,8 @@ class SessionRepository:
             if commit:
                 session.commit()
 
-            session.refresh(data)
+            if flush or commit:
+                session.refresh(data)
 
             return data
 
