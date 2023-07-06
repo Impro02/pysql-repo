@@ -39,7 +39,6 @@ class SessionRepository:
         self._logger = logger
         self._literal_binds = literal_binds
 
-    @property
     def session_manager(self):
         return self._session_factory()
 
