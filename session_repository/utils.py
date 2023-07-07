@@ -209,11 +209,17 @@ def get_conditions_from_dict(
                         else:
                             conditions.append(key.notin_(v))
                     case Operators.HAS:
-                        v = get_filters(v)
+                        v = get_filters(
+                            v,
+                            with_optional=with_optional,
+                        )
                         for condition in v:
                             conditions.append(key.has(condition))
                     case Operators.ANY:
-                        v = get_filters(v)
+                        v = get_filters(
+                            v,
+                            with_optional=with_optional,
+                        )
                         conditions.append(key.any(and_(*v)))
 
     return conditions
