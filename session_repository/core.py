@@ -11,9 +11,6 @@ from typing import (
     Union,
 )
 
-# PYDANTIC
-from pydantic import BaseModel
-
 # SQLALCHEMY
 from sqlalchemy.orm import Session, InstrumentedAttribute
 
@@ -282,7 +279,7 @@ class SessionRepository:
         current_session: Optional[Session] = None,
     ) -> bool:
         def _delete_from_session(session: Session):
-            rows: List[BaseModel] = self._select_all(
+            rows: List = self._select_all(
                 model=model,
                 filters=filters,
                 current_session=session,
