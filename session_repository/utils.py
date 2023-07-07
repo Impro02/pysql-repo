@@ -49,13 +49,25 @@ def apply_no_load(
     return query
 
 
-def apply_filters(query: Query, filter_dict: _FilterType):
-    filters = get_filters(filters=filter_dict)
+def apply_filters(
+    query: Query,
+    filter_dict: _FilterType,
+    with_optional: bool = False,
+):
+    filters = get_filters(
+        filters=filter_dict,
+        with_optional=with_optional,
+    )
 
     return query if len(filters) == 0 else query.filter(and_(*filters))
 
 
-def apply_order_by(query: Query, model, order_by: list[str] | str, direction: str):
+def apply_order_by(
+    query: Query,
+    model,
+    order_by: list[str] | str,
+    direction: str,
+):
     if order_by is None:
         return query
 
@@ -71,7 +83,10 @@ def apply_order_by(query: Query, model, order_by: list[str] | str, direction: st
     return query
 
 
-def build_order_by(model, order_by: dict):
+def build_order_by(
+    model,
+    order_by: dict,
+):
     if isinstance(order_by, dict):
         order_by_list = []
         for key, value in order_by.items():
@@ -90,7 +105,11 @@ def build_order_by(model, order_by: dict):
         raise ValueError("Invalid nomenclature format.")
 
 
-def apply_pagination(query: Query, page: int, per_page: int):
+def apply_pagination(
+    query: Query,
+    page: int,
+    per_page: int,
+):
     pagination = None
     if page is not None and per_page is not None:
         total_results = query.count()
@@ -110,18 +129,24 @@ def apply_pagination(query: Query, page: int, per_page: int):
     return query, pagination
 
 
-def apply_limit(query: Query, limit: int):
+def apply_limit(
+    query: Query,
+    limit: int,
+):
     return query.limit(limit) if limit is not None else query
 
 
-def get_conditions_from_dict(values: _FilterType):
+def get_conditions_from_dict(
+    values: _FilterType,
+    with_optional: bool = False,
+):
     conditions = []
     for key, value in values.items():
         if type(value) == set:
             value = list(value)
         elif type(value) == dict:
             for k, v in value.items():
-                if v is None:
+                if with_optional and v is None:
                     continue
 
                 match k:
@@ -179,7 +204,10 @@ def get_conditions_from_dict(values: _FilterType):
                             conditions.append(key.in_(v))
                     case Operators.NOT_IN:
                         v = v if isinstance(v, Iterable) else [v]
-                        conditions.append(key.notin_(v))
+                        if isinstance(key, tuple):
+                            conditions.append(tuple_(*key).notin_(v))
+                        else:
+                            conditions.append(key.notin_(v))
                     case Operators.HAS:
                         v = get_filters(v)
                         for condition in v:
@@ -191,7 +219,10 @@ def get_conditions_from_dict(values: _FilterType):
     return conditions
 
 
-def get_filters(filters: _FilterType):
+def get_filters(
+    filters: _FilterType,
+    with_optional: bool = False,
+):
     if filters is None:
         return []
     if not isinstance(filters, dict):
@@ -204,7 +235,10 @@ def get_filters(filters: _FilterType):
         if not type(filter_c) == dict:
             continue
 
-        conditions_from_dict = get_conditions_from_dict(filter_c)
+        conditions_from_dict = get_conditions_from_dict(
+            filter_c,
+            with_optional=with_optional,
+        )
         conditions.extend(conditions_from_dict)
 
     return conditions

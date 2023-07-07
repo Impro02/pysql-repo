@@ -75,6 +75,7 @@ class SessionRepository:
         self,
         model,
         filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
@@ -90,6 +91,11 @@ class SessionRepository:
             query = apply_filters(
                 query=query,
                 filter_dict=filters,
+            )
+            query = apply_filters(
+                query=query,
+                filter_dict=optional_filters,
+                with_optional=True,
             )
             query = apply_order_by(
                 query=query,
