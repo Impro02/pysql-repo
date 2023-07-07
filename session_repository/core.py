@@ -46,18 +46,32 @@ class SessionRepository:
         self,
         model,
         filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         current_session: Optional[Session] = None,
     ) -> Optional[Any]:
         def _select_from_session(session: Session):
             query = session.query(model)
-            query = apply_no_load(query=query, relationship_dict=disabled_relationships)
-            query = apply_filters(query=query, filter_dict=filters)
+            query = apply_no_load(
+                query=query,
+                relationship_dict=disabled_relationships,
+            )
+            query = apply_filters(
+                query=query,
+                filter_dict=filters,
+            )
+            query = apply_filters(
+                query=query,
+                filter_dict=optional_filters,
+                with_optional=True,
+            )
             result = query.first()
 
             if self._logger is not None:
                 query_compiled = query.statement.compile(
-                    compile_kwargs={"literal_binds": self._literal_binds}
+                    compile_kwargs={
+                        "literal_binds": self._literal_binds,
+                    }
                 )
                 self._logger.info(query_compiled.string)
 
@@ -112,7 +126,9 @@ class SessionRepository:
 
             if self._logger is not None:
                 query_compiled = query.statement.compile(
-                    compile_kwargs={"literal_binds": self._literal_binds}
+                    compile_kwargs={
+                        "literal_binds": self._literal_binds,
+                    }
                 )
                 self._logger.info(query_compiled.string)
 
@@ -132,6 +148,7 @@ class SessionRepository:
         page: int,
         per_page: int,
         filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
@@ -147,6 +164,11 @@ class SessionRepository:
             query = apply_filters(
                 query=query,
                 filter_dict=filters,
+            )
+            query = apply_filters(
+                query=query,
+                filter_dict=optional_filters,
+                with_optional=True,
             )
             query = apply_order_by(
                 query=query,
@@ -168,7 +190,9 @@ class SessionRepository:
 
             if self._logger is not None:
                 query_compiled = query.statement.compile(
-                    compile_kwargs={"literal_binds": self._literal_binds}
+                    compile_kwargs={
+                        "literal_binds": self._literal_binds,
+                    }
                 )
                 self._logger.info(query_compiled.string)
 
