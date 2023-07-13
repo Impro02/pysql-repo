@@ -4,6 +4,8 @@ import enum
 
 class Operators(enum.Enum):
     LIKE = "LIKE"
+    LIKE_LOWER = "LIKE_LOWER"
+    LIKE_UPPER = "LIKE_UPPER"
     NOT_LIKE = "NOT_LIKE"
     ILIKE = "ILIKE"
     NOT_ILIKE = "NOT_ILIKE"

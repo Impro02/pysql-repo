@@ -10,7 +10,7 @@ from typing import (
 )
 
 # SQLALCHEMY
-from sqlalchemy import and_, asc, desc, tuple_
+from sqlalchemy import and_, asc, desc, tuple_, func
 from sqlalchemy.orm import (
     Query,
     InstrumentedAttribute,
@@ -159,6 +159,16 @@ def get_conditions_from_dict(
                             conditions.append(key.like(v))
                         else:
                             conditions.append(key == v)
+                    case Operators.LIKE_LOWER:
+                        if not isinstance(v, Null):
+                            conditions.append(func.lower(key).like(v.lower()))
+                        else:
+                            conditions.append(func.lower(key) == v.lower())
+                    case Operators.LIKE_UPPER:
+                        if not isinstance(v, Null):
+                            conditions.append(func.upper(key).like(v.upper()))
+                        else:
+                            conditions.append(func.upper(key) == v.upper())
                     case Operators.NOT_LIKE:
                         if not isinstance(v, Null):
                             conditions.append(~key.like(v))
