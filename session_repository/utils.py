@@ -17,7 +17,6 @@ from sqlalchemy.orm import (
     noload,
 )
 from sqlalchemy.sql.elements import Null
-from sqlalchemy.sql.expression import escape
 
 # Enum
 from session_repository.enum import Operators
