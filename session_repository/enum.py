@@ -18,6 +18,8 @@ class Operators(enum.Enum):
     INFERIOR = "INFERIOR"
     INFERIOR_OR_EQUAL = "INFERIOR_OR_EQUAL"
     IN = "IN"
+    IIN = "IIN"
     NOT_IN = "NOT_IN"
+    NOT_IIN = "NOT_IIN"
     HAS = "HAS"
     ANY = "ANY"

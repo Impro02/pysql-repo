@@ -207,12 +207,37 @@ def get_conditions_from_dict(
                             conditions.append(tuple_(*key).in_(v))
                         else:
                             conditions.append(key.in_(v))
+                    case Operators.IIN:
+                        v = v if isinstance(v, Iterable) else [v]
+                        if isinstance(key, tuple):
+                            conditions.append(
+                                tuple_([func.lower(key_) for key_ in key]).in_(
+                                    [func.lower(v_) for v_ in v]
+                                )
+                            )
+                        else:
+                            conditions.append(
+                                func.lower(key).in_([func.lower(v_) for v_ in v])
+                            )
                     case Operators.NOT_IN:
                         v = v if isinstance(v, Iterable) else [v]
                         if isinstance(key, tuple):
                             conditions.append(tuple_(*key).notin_(v))
                         else:
                             conditions.append(key.notin_(v))
+
+                    case Operators.NOT_IIN:
+                        v = v if isinstance(v, Iterable) else [v]
+                        if isinstance(key, tuple):
+                            conditions.append(
+                                tuple_([func.lower(key_) for key_ in key]).notin_(
+                                    [func.lower(v_) for v_ in v]
+                                )
+                            )
+                        else:
+                            conditions.append(
+                                func.lower(key).notin_([func.lower(v_) for v_ in v])
+                            )
                     case Operators.HAS:
                         v = get_filters(
                             v,
