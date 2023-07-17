@@ -9,6 +9,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    TypeVar
 )
 
 # SQLALCHEMY
@@ -285,10 +286,11 @@ class SessionRepository:
         return True
 
 
+T = TypeVar("T", bound=SessionRepository)
 class SessionService:
     def __init__(
         self,
-        repository: SessionRepository,
+        repository: T,
         logger: Logger,
     ) -> None:
         self._repository = repository
