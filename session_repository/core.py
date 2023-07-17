@@ -12,7 +12,7 @@ from typing import (
 )
 
 # SQLALCHEMY
-from sqlalchemy.orm import Session, InstrumentedAttribute
+from sqlalchemy.orm import Session, InstrumentedAttribute, Query
 
 # UTILS
 from session_repository.utils import (
@@ -23,6 +23,19 @@ from session_repository.utils import (
     apply_limit,
     apply_pagination,
 )
+
+
+def with_session(func):
+    def wrapper(self, *args, **kwargs):
+        if "current_session" in kwargs:
+            return func(self, *args, **kwargs)
+
+        with self.session_manager() as session:
+            kwargs["current_session"] = session
+
+            return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class SessionRepository:
@@ -36,9 +49,27 @@ class SessionRepository:
         self._logger = logger
         self._literal_binds = literal_binds
 
+    @classmethod
+    def _log_sql_query(
+        cls,
+        query: Query,
+        logger: Logger,
+        literal_binds: bool = False,
+    ):
+        if logger is None:
+            return
+
+        query_compiled = query.statement.compile(
+            compile_kwargs={
+                "literal_binds": literal_binds,
+            }
+        )
+        logger.info(query_compiled.string)
+
     def session_manager(self):
         return self._session_factory()
 
+    @with_session
     def _select(
         self,
         model,
@@ -47,41 +78,31 @@ class SessionRepository:
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         current_session: Optional[Session] = None,
     ) -> Optional[Any]:
-        def _select_from_session(session: Session):
-            query = session.query(model)
-            query = apply_no_load(
-                query=query,
-                relationship_dict=disabled_relationships,
-            )
-            query = apply_filters(
-                query=query,
-                filter_dict=filters,
-            )
-            query = apply_filters(
-                query=query,
-                filter_dict=optional_filters,
-                with_optional=True,
-            )
-            result = query.first()
+        query = current_session.query(model)
+        query = apply_no_load(
+            query=query,
+            relationship_dict=disabled_relationships,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=filters,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=optional_filters,
+            with_optional=True,
+        )
+        result = query.first()
 
-            if self._logger is not None:
-                query_compiled = query.statement.compile(
-                    compile_kwargs={
-                        "literal_binds": self._literal_binds,
-                    }
-                )
-                self._logger.info(query_compiled.string)
+        self._log_sql_query(
+            query=query,
+            logger=self._logger,
+            literal_binds=self._literal_binds,
+        )
 
-            return result
+        return result
 
-        if current_session is not None:
-            results = _select_from_session(session=current_session)
-        else:
-            with self._session_factory() as session:
-                results = _select_from_session(session=session)
-
-        return results
-
+    @with_session
     def _select_all(
         self,
         model,
@@ -93,52 +114,42 @@ class SessionRepository:
         limit: int = None,
         current_session: Optional[Session] = None,
     ) -> List:
-        def _select_from_session(session: Session):
-            query = session.query(model)
-            query = apply_no_load(
-                query=query,
-                relationship_dict=disabled_relationships,
-            )
-            query = apply_filters(
-                query=query,
-                filter_dict=filters,
-            )
-            query = apply_filters(
-                query=query,
-                filter_dict=optional_filters,
-                with_optional=True,
-            )
-            query = apply_order_by(
-                query=query,
-                model=model,
-                order_by=order_by,
-                direction=direction,
-            )
-            query = apply_limit(
-                query=query,
-                limit=limit,
-            )
+        query = current_session.query(model)
+        query = apply_no_load(
+            query=query,
+            relationship_dict=disabled_relationships,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=filters,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=optional_filters,
+            with_optional=True,
+        )
+        query = apply_order_by(
+            query=query,
+            model=model,
+            order_by=order_by,
+            direction=direction,
+        )
+        query = apply_limit(
+            query=query,
+            limit=limit,
+        )
 
-            results = query.all()
+        results = query.all()
 
-            if self._logger is not None:
-                query_compiled = query.statement.compile(
-                    compile_kwargs={
-                        "literal_binds": self._literal_binds,
-                    }
-                )
-                self._logger.info(query_compiled.string)
-
-            return results
-
-        if current_session is not None:
-            results = _select_from_session(session=current_session)
-        else:
-            with self._session_factory() as session:
-                results = _select_from_session(session=session)
+        self._log_sql_query(
+            query=query,
+            logger=self._logger,
+            literal_binds=self._literal_binds,
+        )
 
         return results
 
+    @with_session
     def _select_paginate(
         self,
         model,
@@ -152,57 +163,47 @@ class SessionRepository:
         limit: int = None,
         current_session: Optional[Session] = None,
     ) -> Tuple[List, str]:
-        def _select_from_session(session: Session):
-            query = session.query(model)
-            query = apply_no_load(
-                query=query,
-                relationship_dict=disabled_relationships,
-            )
-            query = apply_filters(
-                query=query,
-                filter_dict=filters,
-            )
-            query = apply_filters(
-                query=query,
-                filter_dict=optional_filters,
-                with_optional=True,
-            )
-            query = apply_order_by(
-                query=query,
-                model=model,
-                order_by=order_by,
-                direction=direction,
-            )
-            query = apply_limit(
-                query=query,
-                limit=limit,
-            )
-            query, pagination = apply_pagination(
-                query=query,
-                page=page,
-                per_page=per_page,
-            )
+        query = current_session.query(model)
+        query = apply_no_load(
+            query=query,
+            relationship_dict=disabled_relationships,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=filters,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=optional_filters,
+            with_optional=True,
+        )
+        query = apply_order_by(
+            query=query,
+            model=model,
+            order_by=order_by,
+            direction=direction,
+        )
+        query = apply_limit(
+            query=query,
+            limit=limit,
+        )
+        query, pagination = apply_pagination(
+            query=query,
+            page=page,
+            per_page=per_page,
+        )
 
-            results = query.all()
+        results = query.all()
 
-            if self._logger is not None:
-                query_compiled = query.statement.compile(
-                    compile_kwargs={
-                        "literal_binds": self._literal_binds,
-                    }
-                )
-                self._logger.info(query_compiled.string)
+        self._log_sql_query(
+            query=query,
+            logger=self._logger,
+            literal_binds=self._literal_binds,
+        )
 
-            return results, pagination
+        return results, pagination
 
-        if current_session is not None:
-            results = _select_from_session(session=current_session)
-        else:
-            with self._session_factory() as session:
-                results = _select_from_session(session=session)
-
-        return results
-
+    @with_session
     def _update(
         self,
         model,
@@ -212,37 +213,29 @@ class SessionRepository:
         commit: bool = False,
         current_session: Optional[Session] = None,
     ) -> List:
-        def _update_from_session(session: Session):
-            rows = self._select_all(
-                model=model,
-                filters=filters,
-                current_session=session,
-            )
+        rows = self._select_all(
+            model=model,
+            filters=filters,
+            current_session=current_session,
+        )
 
-            if len(rows) == 0:
-                return rows
-
-            for row in rows:
-                for key, value in values.items():
-                    setattr(row, key, value)
-
-            if flush:
-                session.flush()
-            if commit:
-                session.commit()
-
-            [session.refresh(row) for row in rows]
-
+        if len(rows) == 0:
             return rows
 
-        if current_session is not None:
-            results = _update_from_session(session=current_session)
-        else:
-            with self._session_factory() as session:
-                results = _update_from_session(session=session)
+        for row in rows:
+            for key, value in values.items():
+                setattr(row, key, value)
 
-        return results
+        if flush:
+            current_session.flush()
+        if commit:
+            current_session.commit()
 
+        [current_session.refresh(row) for row in rows]
+
+        return rows
+
+    @with_session
     def _add(
         self,
         data,
@@ -250,26 +243,20 @@ class SessionRepository:
         commit: bool = False,
         current_session: Optional[Session] = None,
     ) -> Union[List, Any]:
-        def _add_from_session(session: Session):
-            session.add_all(data) if isinstance(data, list) else session.add(data)
-            if flush:
-                session.flush()
-            if commit:
-                session.commit()
+        current_session.add_all(data) if isinstance(
+            data, list
+        ) else current_session.add(data)
+        if flush:
+            current_session.flush()
+        if commit:
+            current_session.commit()
 
-            if flush or commit:
-                session.refresh(data)
+        if flush or commit:
+            current_session.refresh(data)
 
-            return data
+        return data
 
-        if current_session is not None:
-            results = _add_from_session(session=current_session)
-        else:
-            with self._session_factory() as session:
-                results = _add_from_session(session=session)
-
-        return results
-
+    @with_session
     def _delete(
         self,
         model,
@@ -278,30 +265,34 @@ class SessionRepository:
         commit: bool = False,
         current_session: Optional[Session] = None,
     ) -> bool:
-        def _delete_from_session(session: Session):
-            rows: List = self._select_all(
-                model=model,
-                filters=filters,
-                current_session=session,
-            )
+        rows: List = self._select_all(
+            model=model,
+            filters=filters,
+            current_session=current_session,
+        )
 
-            if len(rows) == 0:
-                return False
+        if len(rows) == 0:
+            return False
 
-            for row in rows:
-                session.delete(row)
+        for row in rows:
+            current_session.delete(row)
 
-            if flush:
-                session.flush()
-            if commit:
-                session.commit()
+        if flush:
+            current_session.flush()
+        if commit:
+            current_session.commit()
 
-            return True
+        return True
 
-        if current_session is not None:
-            results = _delete_from_session(session=current_session)
-        else:
-            with self._session_factory() as session:
-                results = _delete_from_session(session=session)
 
-        return results
+class SessionService:
+    def __init__(
+        self,
+        repository: SessionRepository,
+        logger: Logger,
+    ) -> None:
+        self._repository = repository
+        self._logger = logger
+
+    def session_manager(self):
+        return self._repository.session_manager()
