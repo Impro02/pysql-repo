@@ -1,16 +1,9 @@
 # MODULES
-from contextlib import AbstractContextManager
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from logging import Logger
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    TypeVar
-)
+
+# CONNTEXTLIB
+from contextlib import AbstractContextManager
 
 # SQLALCHEMY
 from sqlalchemy.orm import Session, InstrumentedAttribute, Query
@@ -284,17 +277,3 @@ class SessionRepository:
             current_session.commit()
 
         return True
-
-
-T = TypeVar("T", bound=SessionRepository)
-class SessionService:
-    def __init__(
-        self,
-        repository: T,
-        logger: Logger,
-    ) -> None:
-        self._repository = repository
-        self._logger = logger
-
-    def session_manager(self):
-        return self._repository.session_manager()

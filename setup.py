@@ -1,12 +1,13 @@
 from setuptools import setup
 
-version = "0.2.7"
+version = "0.2.8"
 
 setup(
     name="session-repository",
     version=version,
     packages=[
         "session_repository",
+        "session_repository.models",
     ],
     install_requires=[
         "sqlalchemy==1.4.41",
