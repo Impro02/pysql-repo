@@ -18,9 +18,10 @@ from session_repository.utils import (
     apply_pagination,
 )
 
+
 def with_session(func):
     def wrapper(self, *args, **kwargs):
-        if "current_session" in kwargs:
+        if kwargs.get("current_session") is not None:
             return func(self, *args, **kwargs)
 
         with self.session_manager() as session:
