@@ -73,6 +73,21 @@ class SessionRepository:
         current_session: Optional[Session] = None,
     ) -> Optional[Any]:
         query = current_session.query(model)
+
+        return self._select_query(
+            query=query,
+            filters=filters,
+            optional_filters=optional_filters,
+            disabled_relationships=disabled_relationships,
+        )
+
+    def _select_query(
+        self,
+        query: Query,
+        filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
+        disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
+    ) -> Optional[Any]:
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
@@ -109,6 +124,29 @@ class SessionRepository:
         current_session: Optional[Session] = None,
     ) -> List:
         query = current_session.query(model)
+
+        return self._select_all_query(
+            query=query,
+            model=model,
+            filters=filters,
+            optional_filters=optional_filters,
+            disabled_relationships=disabled_relationships,
+            order_by=order_by,
+            direction=direction,
+            limit=limit,
+        )
+
+    def _select_all_query(
+        self,
+        query: Query,
+        model,
+        filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
+        disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
+        order_by: Optional[Union[List[str], str]] = None,
+        direction: Optional[str] = None,
+        limit: int = None,
+    ) -> List:
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
@@ -158,6 +196,33 @@ class SessionRepository:
         current_session: Optional[Session] = None,
     ) -> Tuple[List, str]:
         query = current_session.query(model)
+
+        return self._select_paginate_query(
+            query=query,
+            model=model,
+            page=page,
+            per_page=per_page,
+            filters=filters,
+            optional_filters=optional_filters,
+            disabled_relationships=disabled_relationships,
+            order_by=order_by,
+            direction=direction,
+            limit=limit,
+        )
+
+    def _select_paginate_query(
+        self,
+        query: Query,
+        model,
+        page: int,
+        per_page: int,
+        filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
+        disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
+        order_by: Optional[Union[List[str], str]] = None,
+        direction: Optional[str] = None,
+        limit: int = None,
+    ) -> Tuple[List, str]:
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
