@@ -249,6 +249,10 @@ def get_conditions_from_dict(
                             v,
                             with_optional=with_optional,
                         )
+
+                        if len(v) == 0:
+                            continue
+
                         conditions.append(key.any(and_(*v)))
 
     return conditions
