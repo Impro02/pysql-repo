@@ -305,7 +305,7 @@ class SessionRepository:
         flush: bool = False,
         commit: bool = False,
         current_session: Optional[Session] = None,
-    ) -> Union[List, Any]:
+    ) -> Union[List[T], T]:
         current_session.add_all(data) if isinstance(
             data, list
         ) else current_session.add(data)
