@@ -1,11 +1,12 @@
 # MODULES
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 from logging import Logger
 
 # CONNTEXTLIB
 from contextlib import AbstractContextManager
 
 # SQLALCHEMY
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, InstrumentedAttribute, Query
 
 # UTILS
@@ -30,6 +31,9 @@ def with_session(func):
             return func(self, *args, **kwargs)
 
     return wrapper
+
+
+T = TypeVar("T", bound=declarative_base())
 
 
 class SessionRepository:
@@ -66,12 +70,12 @@ class SessionRepository:
     @with_session
     def _select(
         self,
-        model,
+        model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         current_session: Optional[Session] = None,
-    ) -> Optional[Any]:
+    ) -> Optional[T]:
         query = current_session.query(model)
 
         return self._select_query(
@@ -114,7 +118,7 @@ class SessionRepository:
     @with_session
     def _select_all(
         self,
-        model,
+        model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
@@ -122,7 +126,7 @@ class SessionRepository:
         direction: Optional[str] = None,
         limit: int = None,
         current_session: Optional[Session] = None,
-    ) -> List:
+    ) -> List[T]:
         query = current_session.query(model)
 
         return self._select_all_query(
@@ -139,14 +143,14 @@ class SessionRepository:
     def _select_all_query(
         self,
         query: Query,
-        model,
+        model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-    ) -> List:
+    ) -> List[T]:
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
@@ -184,7 +188,7 @@ class SessionRepository:
     @with_session
     def _select_paginate(
         self,
-        model,
+        model: Type[T],
         page: int,
         per_page: int,
         filters: Optional[_FilterType] = None,
@@ -194,7 +198,7 @@ class SessionRepository:
         direction: Optional[str] = None,
         limit: int = None,
         current_session: Optional[Session] = None,
-    ) -> Tuple[List, str]:
+    ) -> Tuple[List[T], str]:
         query = current_session.query(model)
 
         return self._select_paginate_query(
@@ -213,7 +217,7 @@ class SessionRepository:
     def _select_paginate_query(
         self,
         query: Query,
-        model,
+        model: Type[T],
         page: int,
         per_page: int,
         filters: Optional[_FilterType] = None,
@@ -222,7 +226,7 @@ class SessionRepository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-    ) -> Tuple[List, str]:
+    ) -> Tuple[List[T], str]:
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
@@ -265,13 +269,13 @@ class SessionRepository:
     @with_session
     def _update(
         self,
-        model,
+        model: Type[T],
         values: Dict,
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         current_session: Optional[Session] = None,
-    ) -> List:
+    ) -> List[T]:
         rows = self._select_all(
             model=model,
             filters=filters,
@@ -297,7 +301,7 @@ class SessionRepository:
     @with_session
     def _add(
         self,
-        data,
+        data: Union[List[T], T],
         flush: bool = False,
         commit: bool = False,
         current_session: Optional[Session] = None,
@@ -318,7 +322,7 @@ class SessionRepository:
     @with_session
     def _delete(
         self,
-        model,
+        model: T,
         filters: Optional[_FilterType] = None,
         flush: bool = True,
         commit: bool = False,
