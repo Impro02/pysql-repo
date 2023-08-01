@@ -1,6 +1,5 @@
 # MODULES
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
-from logging import Logger
 
 # CONNTEXTLIB
 from contextlib import AbstractContextManager
@@ -40,29 +39,8 @@ class SessionRepository:
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
-        logger: Logger,
-        literal_binds: bool = True,
     ) -> None:
         self._session_factory = session_factory
-        self._logger = logger
-        self._literal_binds = literal_binds
-
-    @classmethod
-    def _log_sql_query(
-        cls,
-        query: Query,
-        logger: Logger,
-        literal_binds: bool = False,
-    ):
-        if logger is None:
-            return
-
-        query_compiled = query.statement.compile(
-            compile_kwargs={
-                "literal_binds": literal_binds,
-            }
-        )
-        logger.info(query_compiled.string)
 
     def session_manager(self):
         return self._session_factory()
@@ -106,12 +84,6 @@ class SessionRepository:
             with_optional=True,
         )
         result = query.first()
-
-        self._log_sql_query(
-            query=query,
-            logger=self._logger,
-            literal_binds=self._literal_binds,
-        )
 
         return result
 
@@ -176,12 +148,6 @@ class SessionRepository:
         )
 
         results = query.all()
-
-        self._log_sql_query(
-            query=query,
-            logger=self._logger,
-            literal_binds=self._literal_binds,
-        )
 
         return results
 
@@ -258,16 +224,10 @@ class SessionRepository:
 
         results = query.all()
 
-        self._log_sql_query(
-            query=query,
-            logger=self._logger,
-            literal_binds=self._literal_binds,
-        )
-
         return results, pagination
 
     @with_session
-    def _update(
+    def _update_all(
         self,
         model: Type[T],
         values: Dict,
@@ -299,16 +259,64 @@ class SessionRepository:
         return rows
 
     @with_session
-    def _add(
+    def _update(
         self,
-        data: Union[List[T], T],
+        model: Type[T],
+        values: Dict,
+        filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         current_session: Optional[Session] = None,
-    ) -> Union[List[T], T]:
-        current_session.add_all(data) if isinstance(
-            data, list
-        ) else current_session.add(data)
+    ) -> T:
+        row = self._select(
+            model=model,
+            filters=filters,
+            current_session=current_session,
+        )
+
+        if row is None:
+            return
+
+        for key, value in values.items():
+            setattr(row, key, value)
+
+        if flush:
+            current_session.flush()
+        if commit:
+            current_session.commit()
+
+        current_session.refresh(row)
+
+        return row
+
+    @with_session
+    def _add_all(
+        self,
+        data: List[T],
+        flush: bool = False,
+        commit: bool = False,
+        current_session: Optional[Session] = None,
+    ) -> List[T]:
+        current_session.add_all(data)
+        if flush:
+            current_session.flush()
+        if commit:
+            current_session.commit()
+
+        if flush or commit:
+            [current_session.refresh(item) for item in data]
+
+        return data
+
+    @with_session
+    def _add(
+        self,
+        data: T,
+        flush: bool = False,
+        commit: bool = False,
+        current_session: Optional[Session] = None,
+    ) -> T:
+        current_session.add(data)
         if flush:
             current_session.flush()
         if commit:
