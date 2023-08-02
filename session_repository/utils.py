@@ -10,7 +10,7 @@ from typing import (
 )
 
 # SQLALCHEMY
-from sqlalchemy import and_, asc, desc, tuple_, func
+from sqlalchemy import and_, asc, desc, tuple_, func, null
 from sqlalchemy.orm import (
     Query,
     InstrumentedAttribute,
@@ -153,11 +153,17 @@ def get_conditions_from_dict(
                     case Operators.EQUAL:
                         conditions.append(key == v)
                     case Operators.IEQUAL:
-                        conditions.append(func.lower(key) == func.lower(v))
+                        if not isinstance(v, Null):
+                            conditions.append(func.lower(key) == func.lower(v))
+                        else:
+                            conditions.append(key == v)
                     case Operators.DIFFERENT:
                         conditions.append(key != v)
                     case Operators.IDIFFERENT:
-                        conditions.append(func.lower(key) != func.lower(v))
+                        if not isinstance(v, Null):
+                            conditions.append(func.lower(key) != func.lower(v))
+                        else:
+                            conditions.append(key != v)
                     case Operators.LIKE:
                         if not isinstance(v, Null):
                             conditions.append(key.like(v))
@@ -211,12 +217,24 @@ def get_conditions_from_dict(
                         if isinstance(key, tuple):
                             conditions.append(
                                 tuple_([func.lower(key_) for key_ in key]).in_(
-                                    [func.lower(v_) for v_ in v]
+                                    [
+                                        func.lower(v_)
+                                        if not isinstance(v_, Null)
+                                        else v_
+                                        for v_ in v
+                                    ]
                                 )
                             )
                         else:
                             conditions.append(
-                                func.lower(key).in_([func.lower(v_) for v_ in v])
+                                func.lower(key).in_(
+                                    [
+                                        func.lower(v_)
+                                        if not isinstance(v_, Null)
+                                        else v_
+                                        for v_ in v
+                                    ]
+                                )
                             )
                     case Operators.NOT_IN:
                         v = v if isinstance(v, Iterable) else [v]
@@ -230,12 +248,24 @@ def get_conditions_from_dict(
                         if isinstance(key, tuple):
                             conditions.append(
                                 tuple_([func.lower(key_) for key_ in key]).notin_(
-                                    [func.lower(v_) for v_ in v]
+                                    [
+                                        func.lower(v_)
+                                        if not isinstance(v_, Null)
+                                        else v_
+                                        for v_ in v
+                                    ]
                                 )
                             )
                         else:
                             conditions.append(
-                                func.lower(key).notin_([func.lower(v_) for v_ in v])
+                                func.lower(key).notin_(
+                                    [
+                                        func.lower(v_)
+                                        if not isinstance(v_, Null)
+                                        else v_
+                                        for v_ in v
+                                    ]
+                                )
                             )
                     case Operators.HAS:
                         v = get_filters(
