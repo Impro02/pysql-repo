@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.3.7"
+version = "0.3.8"
 
 setup(
     name="session-repository",
@@ -10,7 +10,7 @@ setup(
         "session_repository.models",
     ],
     install_requires=[
-        "sqlalchemy==1.4.41",
+        "sqlalchemy",
     ],
     license="MIT",
     author="Maxime MARTIN",
