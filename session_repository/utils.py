@@ -65,22 +65,29 @@ def apply_filters(
 def apply_order_by(
     query: Query,
     model,
-    order_by: list[str] | str,
-    direction: str,
+    order_by: Union[List[str], str],
+    direction: Union[List[str], str],
 ):
-    if order_by is None:
+    if order_by is None or direction is None:
         return query
+
+    if len(order_by) != len(direction):
+        raise ValueError("order_by length must be equals to direction length")
 
     if isinstance(order_by, str):
         order_by = [order_by]
 
-    if direction == "desc":
-        return query.order_by(*[desc(getattr(model, column)) for column in order_by])
+    if isinstance(direction, str):
+        direction = [direction]
 
-    if direction == "asc":
-        return query.order_by(*[asc(getattr(model, column)) for column in order_by])
+    order_by_list = []
+    for column, dir in zip(order_by, direction):
+        if dir == "desc":
+            order_by_list.append(desc(getattr(model, column)))
+        elif dir == "asc":
+            order_by_list.append(asc(getattr(model, column)))
 
-    return query
+    return query.order_by(*order_by_list)
 
 
 def build_order_by(
