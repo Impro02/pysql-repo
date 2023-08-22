@@ -16,6 +16,8 @@ setup(
     author="Maxime MARTIN",
     author_email="maxime.martin02@hotmail.fr",
     description="A project to have a base repository class to permform select/insert/update/delete with dynamtic syntaxe",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     url="https://github.com/Impro02/session-repository",
     download_url="https://github.com/Impro02/session-repository/archive/refs/tags/%s.tar.gz"
     % version,
