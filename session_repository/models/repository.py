@@ -120,7 +120,7 @@ class SessionRepository:
         optional_filters: Optional[_FilterType] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
     ) -> List[T]:
         query = apply_no_load(
