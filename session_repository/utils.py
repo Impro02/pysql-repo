@@ -71,14 +71,14 @@ def apply_order_by(
     if order_by is None or direction is None:
         return query
 
-    if len(order_by) != len(direction):
-        raise ValueError("order_by length must be equals to direction length")
-
     if isinstance(order_by, str):
         order_by = [order_by]
 
     if isinstance(direction, str):
         direction = [direction]
+
+    if len(order_by) != len(direction):
+        raise ValueError("order_by length must be equals to direction length")
 
     order_by_list = []
     for column, dir in zip(order_by, direction):
