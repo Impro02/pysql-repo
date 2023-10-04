@@ -174,9 +174,9 @@ class UserRepository(SessionRepository):
         flush: bool = False,
         commit: bool = True,
         current_session: Optional[Session] = None,
-    ) -> DataInspectionFvi:
+    ) -> User:
         user = self._add(
-            data=DataInspectionFvi(
+            data=User(
                 **{
                     User.email.key: data.email,
                     User.hashed_password.key: data.hashed_password,
