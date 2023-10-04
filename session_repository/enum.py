@@ -23,3 +23,12 @@ class Operators(enum.Enum):
     NOT_IIN = "NOT_IIN"
     HAS = "HAS"
     ANY = "ANY"
+
+
+class LoadingTechnique(enum.Enum):
+    LAZY = "select"
+    JOINED = "joined"
+    SUBQUERY = "subquery"
+    SELECTIN = "selectin"
+    RAISE = "raise"
+    NOLOAD = "noload"

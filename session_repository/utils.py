@@ -1,39 +1,82 @@
 # MODULES
+from dataclasses import dataclass
 import json
 from typing import (
     Any,
     Dict,
     Iterable,
     List,
+    Optional,
     Tuple,
     Union,
 )
 
 # SQLALCHEMY
-from sqlalchemy import and_, asc, desc, tuple_, func, null
+from sqlalchemy import and_, asc, desc, tuple_, func
 from sqlalchemy.orm import (
     Query,
     InstrumentedAttribute,
     noload,
+    lazyload,
+    joinedload,
+    subqueryload,
+    selectinload,
+    raiseload,
 )
 from sqlalchemy.sql.elements import Null
 
 # Enum
-from session_repository.enum import Operators
+from session_repository.enum import LoadingTechnique, Operators
 
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 
 
-def apply_join(
+@dataclass
+class RelationshipOption:
+    lazy: LoadingTechnique
+    childs: Optional[Dict[InstrumentedAttribute, "RelationshipOption"]] = None
+
+
+def apply_relationship_options(
     query: Query,
-    joined_relationships: List[InstrumentedAttribute],
+    relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
+    parents: List[InstrumentedAttribute] = None,
 ):
-    if joined_relationships is None:
+    if relationship_options is None:
         return query
 
-    for relationship in joined_relationships:
-        query = query.join(relationship)
+    for relationship, sub_relationships in relationship_options.items():
+        if relationship is None or not isinstance(relationship, InstrumentedAttribute):
+            continue
+        if sub_relationships is None or not isinstance(
+            relationship, RelationshipOption
+        ):
+            continue
+
+        sub_items = [relationship] if parents is None else [*parents, relationship]
+        match sub_relationships.lazy:
+            case LoadingTechnique.LAZY:
+                query = query.options(lazyload(*sub_items))
+            case LoadingTechnique.JOINED:
+                query = query.options(joinedload(*sub_items))
+            case LoadingTechnique.SUBQUERY:
+                query = query.options(subqueryload(*sub_items))
+            case LoadingTechnique.SELECTIN:
+                query = query.options(selectinload(*sub_items))
+            case LoadingTechnique.RAISE:
+                query = query.options(raiseload(*sub_items))
+            case LoadingTechnique.NOLOAD:
+                query = query.options(noload(*sub_items))
+
+        if sub_relationships.childs is not None:
+            query = apply_relationship_options(
+                query,
+                relationship_options=sub_relationships.childs,
+                parents=sub_items,
+            )
+
     return query
+
 
 def apply_no_load(
     query: Query,
