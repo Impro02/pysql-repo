@@ -24,6 +24,17 @@ from session_repository.enum import Operators
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 
 
+def apply_join(
+    query: Query,
+    joined_relationships: List[InstrumentedAttribute],
+):
+    if joined_relationships is None:
+        return query
+
+    for relationship in joined_relationships:
+        query = query.join(relationship)
+    return query
+
 def apply_no_load(
     query: Query,
     relationship_dict: Dict[InstrumentedAttribute, Any],

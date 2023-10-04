@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, InstrumentedAttribute, Query
 # UTILS
 from session_repository.utils import (
     _FilterType,
+    apply_join,
     apply_no_load,
     apply_filters,
     apply_order_by,
@@ -51,6 +52,7 @@ class SessionRepository:
         model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
+        joined_relationships: Optional[List[InstrumentedAttribute]] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         current_session: Optional[Session] = None,
     ) -> Optional[T]:
@@ -60,6 +62,7 @@ class SessionRepository:
             query=query,
             filters=filters,
             optional_filters=optional_filters,
+            joined_relationships=joined_relationships,
             disabled_relationships=disabled_relationships,
         )
 
@@ -68,8 +71,13 @@ class SessionRepository:
         query: Query,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
+        joined_relationships: Optional[List[InstrumentedAttribute]] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
     ) -> Optional[Any]:
+        query = apply_join(
+            query=query,
+            joined_relationships=joined_relationships,
+        )
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
@@ -93,6 +101,7 @@ class SessionRepository:
         model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
+        joined_relationships: Optional[List[InstrumentedAttribute]] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
@@ -106,6 +115,7 @@ class SessionRepository:
             model=model,
             filters=filters,
             optional_filters=optional_filters,
+            joined_relationships=joined_relationships,
             disabled_relationships=disabled_relationships,
             order_by=order_by,
             direction=direction,
@@ -118,11 +128,16 @@ class SessionRepository:
         model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
+        joined_relationships: Optional[List[InstrumentedAttribute]] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
     ) -> List[T]:
+        query = apply_join(
+            query=query,
+            joined_relationships=joined_relationships,
+        )
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
@@ -159,6 +174,7 @@ class SessionRepository:
         per_page: int,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
+        joined_relationships: Optional[List[InstrumentedAttribute]] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
@@ -174,6 +190,7 @@ class SessionRepository:
             per_page=per_page,
             filters=filters,
             optional_filters=optional_filters,
+            joined_relationships=joined_relationships,
             disabled_relationships=disabled_relationships,
             order_by=order_by,
             direction=direction,
@@ -188,11 +205,16 @@ class SessionRepository:
         per_page: int,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
+        joined_relationships: Optional[List[InstrumentedAttribute]] = None,
         disabled_relationships: Optional[Dict[InstrumentedAttribute, Any]] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
     ) -> Tuple[List[T], str]:
+        query = apply_join(
+            query=query,
+            joined_relationships=joined_relationships,
+        )
         query = apply_no_load(
             query=query,
             relationship_dict=disabled_relationships,
