@@ -49,7 +49,7 @@ def apply_relationship_options(
         if relationship is None or not isinstance(relationship, InstrumentedAttribute):
             continue
         if sub_relationships is None or not isinstance(
-            relationship, RelationshipOption
+            sub_relationships, RelationshipOption
         ):
             continue
 

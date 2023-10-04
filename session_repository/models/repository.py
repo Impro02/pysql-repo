@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, InstrumentedAttribute, Query
 # UTILS
 from session_repository.utils import (
     _FilterType,
+    RelationshipOption,
     apply_relationship_options,
     apply_no_load,
     apply_filters,
@@ -52,7 +53,9 @@ class SessionRepository:
         model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[List[InstrumentedAttribute]] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
         current_session: Optional[Session] = None,
     ) -> Optional[T]:
         query = current_session.query(model)
@@ -69,7 +72,9 @@ class SessionRepository:
         query: Query,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[List[InstrumentedAttribute]] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
     ) -> Optional[Any]:
         query = apply_relationship_options(
             query=query,
@@ -94,7 +99,9 @@ class SessionRepository:
         model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[List[InstrumentedAttribute]] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
@@ -119,7 +126,9 @@ class SessionRepository:
         model: Type[T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[List[InstrumentedAttribute]] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
@@ -160,7 +169,9 @@ class SessionRepository:
         per_page: int,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[List[InstrumentedAttribute]] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
@@ -189,7 +200,9 @@ class SessionRepository:
         per_page: int,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[List[InstrumentedAttribute]] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
