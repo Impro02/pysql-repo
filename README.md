@@ -19,7 +19,7 @@ from session_repository.utils import RelationshipOption
 
 ## Reading the example code
 
-To create a repository, you just have to inherit you class from SessionRepository.
+To create a repository, you just have to inherit your class from SessionRepository.
 
 ```
 from sqlalchemy import Column, Integer, String
@@ -238,7 +238,7 @@ class UserRepository(SessionRepository):
 ```
 
 
-To create a service, you just have to inherit you class from SessionService.
+To create a service, you just have to inherit your class from SessionService.
 
 ```
 T = TypeVar("T", bound=UserReadSchema)
@@ -329,7 +329,6 @@ class UserService(SessionService[UserRepository]):
         )
 
         if user is not None:
-            error_str = "already exists"
             self._logger.error(
                 "Unable to create new user beacuse email alrady used bu another one"
             )
