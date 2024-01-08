@@ -22,49 +22,121 @@ from session_repository.utils import RelationshipOption
 To create a repository, you just have to inherit your class from SessionRepository.
 
 ```
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class City(Base):
-    __tablename__ = 'cities'
+    __tablename__ = "CITY"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    state = Column(String, index=True)
+    id = Column(
+        "ID",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+    name = Column(
+        "NAME",
+        String,
+        index=True,
+    )
+    state = Column(
+        "STATE",
+        String,
+        index=True,
+    )
 
-    addresses = relationship("Address", back_populates="city")
+    addresses = relationship(
+        "Address",
+        back_populates="city",
+    )
+
 
 class Address(Base):
-    __tablename__ = 'addresses'
+    __tablename__ = "ADDRESS"
 
-    id = Column(Integer, primary_key=True, index=True)
-    street = Column(String, index=True)
-    zip_code = Column(String, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    city_id = Column(Integer, ForeignKey('cities.id'))
+    id = Column(
+        "ID",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+    street = Column(
+        "STREET",
+        String,
+        index=True,
+    )
+    zip_code = Column(
+        "ZIP_CODE",
+        Integer,
+        index=True,
+    )
+    user_id = Column(
+        "USER_ID",
+        Integer,
+        ForeignKey("USER.ID"),
+    )
+    city_id = Column(
+        "CITY_ID",
+        Integer,
+        ForeignKey("CITY.ID"),
+    )
 
-    user = relationship("User", back_populates="addresses")
-    city = relationship("City", back_populates="addresses")
+    user = relationship(
+        "User",
+        back_populates="addresses",
+    )
+    city = relationship(
+        "City",
+        back_populates="addresses",
+    )
+
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "USER"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    full_name = Column(String, index=True)
-    is_active = Column(Boolean, default=True)
+    id = Column(
+        "ID",
+        Integer,
+        primary_key=True,
+        index=True,
+    )
+    email = Column(
+        "EMAIL",
+        String,
+        unique=True,
+        index=True,
+    )
+    hashed_password = Column(
+        "HASHED_PASSWORD",
+        String,
+    )
+    full_name = Column(
+        "FULL_NAME",
+        String,
+        index=True,
+    )
+    is_active = Column(
+        "IS_ACTIVE",
+        Boolean,
+        default=True,
+    )
 
-    addresses = relationship("Address", back_populates="user")
+    addresses = relationship(
+        "Address",
+        back_populates="user",
+    )
 
 
 class UserRepository(SessionRepository):
-    def __init__(self, session: Session):
-        super().__init__(
-            session,
-        )
+    def __init__(
+        self,
+        session_factory: Callable[..., AbstractContextManager[Session]],
+    ) -> None:
+        super().__init__(session_factory)
 
     @classmethod
     def __get_filters(
@@ -256,7 +328,7 @@ class UserService(SessionService[UserRepository]):
         )
 
 
-    @with_session
+    @with_session()
     def get_users(
         self,
         ids: Optional[List[int]] = None,
@@ -274,7 +346,7 @@ class UserService(SessionService[UserRepository]):
 
         return [schema.model_validate(user) for user in users]
 
-    @with_session
+    @with_session()
     def get_users_paginate(
         self,
         page: int,
@@ -298,7 +370,7 @@ class UserService(SessionService[UserRepository]):
         return [schema.model_validate(user) for user in users], pagination
 
 
-    @with_session
+    @with_session()
     def get_user_by_id(
         self,
         id: int,
@@ -315,7 +387,7 @@ class UserService(SessionService[UserRepository]):
 
         return schema.model_validate(user)
 
-    @with_session
+    @with_session()
     async def create_user(
         self,
         data: UserCreateSchema,
@@ -347,7 +419,7 @@ class UserService(SessionService[UserRepository]):
         return schema.model_validate(user)
 
 
-    @with_session
+    @with_session()
     async def delete_user(
         self,
         id: int,
