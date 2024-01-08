@@ -92,7 +92,7 @@ class UserRepository(SessionRepository):
                 )
                 if additional_zip_code_sup
                 else None,
-                childs={
+                children={
                     Address.city: RelationshipOption(
                         lazy=LoadingTechnique.JOINED
                         if load_city

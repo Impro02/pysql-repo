@@ -154,7 +154,7 @@ class UserRepository(SessionRepository):
         return {
             User.adresses: RelationshipOption(
                 lazy=LoadingTechnique.JOINED,
-                childs={
+                children={
                     Adress.city: RelationshipOption(
                         lazy=LoadingTechnique.LAZY
                     )

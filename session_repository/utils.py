@@ -43,7 +43,7 @@ class SpecificJoin:
 class RelationshipOption:
     lazy: LoadingTechnique
     specific_join: SpecificJoin = field(default=None)
-    childs: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
+    children: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
 
 
 def apply_relationship_options(
@@ -110,10 +110,10 @@ def apply_relationship_options(
         if load is not None:
             query = query.options(load)
 
-        if (childs := sub_relationships.childs) is not None:
+        if (children := sub_relationships.children) is not None:
             query = apply_relationship_options(
                 query,
-                relationship_options=childs,
+                relationship_options=children,
                 parents=sub_items,
             )
 
