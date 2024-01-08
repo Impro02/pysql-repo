@@ -1,8 +1,4 @@
-﻿# IDE - VSCode
-.vscode/*
-
-
-# Byte-compiled / optimized / DLL files
+﻿# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -12,79 +8,41 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+env/
 build/
-develop-eggs/
 dist/
-downloads/
 eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
 *.egg
-MANIFEST
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
 
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-*.sqlite
 htmlcov/
-.tox/
 .coverage
-.coverage.*
-.cache
+.tox/
 nosetests.xml
 coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
 
-# pyenv
-.python-version
+# Django related files
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
 
-# celery beat schedule file
-celerybeat-schedule
+# Ignore SQLite database
+*.sqlite
 
-# SageMath parsed files
-*.sage.py
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mypy
-.mypy_cache/
-
-.log
-.log.*
-logs
-wafermap_clustering/*.log
-.vs
-
-#configs
-configs/*.json
+# Other
+*.bak
+*.swp
