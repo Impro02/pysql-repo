@@ -1,0 +1,11 @@
+[
+    {
+        "ID": 1,
+        "NAME": "New York",
+        "STATE": "NY"
+    },{
+        "ID": 2,
+        "NAME": "Seatle",
+        "STATE": "WA"
+    }
+]

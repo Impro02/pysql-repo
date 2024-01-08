@@ -1,0 +1,30 @@
+[
+    {
+        "ID": 1,
+        "STREET": "Foo Avenue",
+        "ZIP_CODE": 9898,
+        "USER_ID": 1,
+        "CITY_ID": 1
+    },
+    {
+        "ID": 2,
+        "STREET": "Boo Avenue",
+        "ZIP_CODE": 121,
+        "USER_ID": 1,
+        "CITY_ID": 2
+    },
+    {
+        "ID": 3,
+        "STREET": "Zoo Avenue",
+        "ZIP_CODE": 290,
+        "USER_ID": 2,
+        "CITY_ID": 2
+    },
+    {
+        "ID": 4,
+        "STREET": "Poo Avenue",
+        "ZIP_CODE": 876,
+        "USER_ID": 3,
+        "CITY_ID": 1
+    }
+]

@@ -1,0 +1,23 @@
+[
+    {
+        "ID": 1,
+        "EMAIL": "foo@test.com",
+        "HASHED_PASSWORD": "zoo",
+        "FULL_NAME": " foo bar",
+        "IS_ACTIVE": true
+    },
+    {
+        "ID": 2,
+        "EMAIL": "boo@test.com",
+        "HASHED_PASSWORD": "too",
+        "FULL_NAME": " boo bar",
+        "IS_ACTIVE": false
+    },
+    {
+        "ID": 3,
+        "EMAIL": "zoo@test.com",
+        "HASHED_PASSWORD": "uoo",
+        "FULL_NAME": " poo nar",
+        "IS_ACTIVE": true
+    }
+]
