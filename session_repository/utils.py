@@ -1,5 +1,5 @@
 # MODULES
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 from typing import (
     Any,
@@ -15,15 +15,16 @@ from typing import (
 from sqlalchemy import and_, asc, desc, tuple_, func
 from sqlalchemy.orm import (
     Query,
-    InstrumentedAttribute,
     noload,
     lazyload,
     joinedload,
     subqueryload,
     selectinload,
     raiseload,
+    contains_eager,
 )
-from sqlalchemy.sql.elements import Null
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.sql.elements import Null, BinaryExpression
 
 # Enum
 from session_repository.enum import LoadingTechnique, Operators
@@ -32,9 +33,18 @@ _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], A
 
 
 @dataclass
+class SpecificJoin:
+    extra_conditions: BinaryExpression
+    skip_lazy: bool = True
+    full_join: bool = False
+    is_outer_join: bool = False
+
+
+@dataclass
 class RelationshipOption:
     lazy: LoadingTechnique
-    childs: Optional[Dict[InstrumentedAttribute, "RelationshipOption"]] = None
+    specific_join: SpecificJoin = field(default=None)
+    childs: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
 
 
 def apply_relationship_options(
@@ -42,61 +52,69 @@ def apply_relationship_options(
     relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
     parents: List[InstrumentedAttribute] = None,
 ):
+    def get_load(
+        skip_lazy: bool,
+        loading_technique: LoadingTechnique,
+        items: List[InstrumentedAttribute],
+    ):
+        if skip_lazy:
+            return contains_eager(relationship)
+        elif loading_technique == LoadingTechnique.CONTAINS_EAGER:
+            return contains_eager(*items)
+        elif loading_technique == LoadingTechnique.LAZY:
+            return lazyload(*items)
+        elif loading_technique == LoadingTechnique.JOINED:
+            return joinedload(*items)
+        elif loading_technique == LoadingTechnique.SUBQUERY:
+            return subqueryload(*items)
+        elif loading_technique == LoadingTechnique.SELECTIN:
+            return selectinload(*items)
+        elif loading_technique == LoadingTechnique.RAISE:
+            return raiseload(*items)
+        elif loading_technique == LoadingTechnique.NOLOAD:
+            return noload(*items)
+
+        return None
+
     if relationship_options is None:
         return query
 
     for relationship, sub_relationships in relationship_options.items():
-        if relationship is None or not isinstance(relationship, InstrumentedAttribute):
-            continue
-        if sub_relationships is None or not isinstance(
-            sub_relationships, RelationshipOption
+        if any(
+            [
+                relationship is None,
+                not isinstance(relationship, InstrumentedAttribute),
+                sub_relationships is None,
+                not isinstance(sub_relationships, RelationshipOption),
+            ]
         ):
             continue
 
         sub_items = [relationship] if parents is None else [*parents, relationship]
-        match sub_relationships.lazy:
-            case LoadingTechnique.LAZY:
-                query = query.options(lazyload(*sub_items))
-            case LoadingTechnique.JOINED:
-                query = query.options(joinedload(*sub_items))
-            case LoadingTechnique.SUBQUERY:
-                query = query.options(subqueryload(*sub_items))
-            case LoadingTechnique.SELECTIN:
-                query = query.options(selectinload(*sub_items))
-            case LoadingTechnique.RAISE:
-                query = query.options(raiseload(*sub_items))
-            case LoadingTechnique.NOLOAD:
-                query = query.options(noload(*sub_items))
 
-        if sub_relationships.childs is not None:
-            query = apply_relationship_options(
-                query,
-                relationship_options=sub_relationships.childs,
-                parents=sub_items,
+        skip_lazy = False
+        if (specific_join := sub_relationships.specific_join) is not None:
+            skip_lazy = specific_join.skip_lazy
+
+            query = query.join(
+                relationship.and_(specific_join.extra_conditions),
+                isouter=specific_join.is_outer_join,
+                full=specific_join.full_join,
             )
 
-    return query
+        load = get_load(
+            skip_lazy=skip_lazy,
+            loading_technique=sub_relationships.lazy,
+            items=sub_items,
+        )
 
+        if load is not None:
+            query = query.options(load)
 
-def apply_no_load(
-    query: Query,
-    relationship_dict: Dict[InstrumentedAttribute, Any],
-    parents: List[InstrumentedAttribute] = None,
-):
-    if relationship_dict is None:
-        return query
-
-    for relationship, sub_relationships in relationship_dict.items():
-        if relationship is None or not isinstance(relationship, InstrumentedAttribute):
-            continue
-
-        sub_items = [relationship] if parents is None else [*parents, relationship]
-        if sub_relationships is None:
-            query = query.options(noload(*sub_items))
-        else:
-            query = apply_no_load(
+        if (childs := sub_relationships.childs) is not None:
+            query = apply_relationship_options(
                 query,
-                relationship_dict=sub_relationships,
+                relationship_options=childs,
                 parents=sub_items,
             )
 
@@ -142,28 +160,6 @@ def apply_order_by(
             order_by_list.append(asc(getattr(model, column)))
 
     return query.order_by(*order_by_list)
-
-
-def build_order_by(
-    model,
-    order_by: dict,
-):
-    if isinstance(order_by, dict):
-        order_by_list = []
-        for key, value in order_by.items():
-            if isinstance(value, dict):
-                relationship = getattr(model, key)
-                order_by_relationship = build_order_by(value, relationship)
-                order_by_list.extend(order_by_relationship)
-            else:
-                column = getattr(model, key)
-                if value == "ASC":
-                    order_by_list.append(asc(column))
-                elif value == "DESC":
-                    order_by_list.append(desc(column))
-        return order_by_list
-    else:
-        raise ValueError("Invalid nomenclature format.")
 
 
 def apply_pagination(

@@ -26,6 +26,7 @@ class Operators(enum.Enum):
 
 
 class LoadingTechnique(enum.Enum):
+    CONTAINS_EAGER = "contains_eager"
     LAZY = "select"
     JOINED = "joined"
     SUBQUERY = "subquery"

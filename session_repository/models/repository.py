@@ -8,30 +8,19 @@ from contextlib import AbstractContextManager
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, InstrumentedAttribute, Query
 
+# DECORATORS
+from session_repository.decorators import with_session
+
 # UTILS
 from session_repository.utils import (
     _FilterType,
     RelationshipOption,
     apply_relationship_options,
-    apply_no_load,
     apply_filters,
     apply_order_by,
     apply_limit,
     apply_pagination,
 )
-
-
-def with_session(func):
-    def wrapper(self, *args, **kwargs):
-        if kwargs.get("current_session") is not None:
-            return func(self, *args, **kwargs)
-
-        with self.session_manager() as session:
-            kwargs["current_session"] = session
-
-            return func(self, *args, **kwargs)
-
-    return wrapper
 
 
 T = TypeVar("T", bound=declarative_base())
@@ -47,7 +36,7 @@ class SessionRepository:
     def session_manager(self):
         return self._session_factory()
 
-    @with_session
+    @with_session()
     def _select(
         self,
         model: Type[T],
@@ -56,9 +45,9 @@ class SessionRepository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> Optional[T]:
-        query = current_session.query(model)
+        query = session.query(model)
 
         return self._select_query(
             query=query,
@@ -93,7 +82,7 @@ class SessionRepository:
 
         return result
 
-    @with_session
+    @with_session()
     def _select_all(
         self,
         model: Type[T],
@@ -105,9 +94,9 @@ class SessionRepository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> List[T]:
-        query = current_session.query(model)
+        query = session.query(model)
 
         return self._select_all_query(
             query=query,
@@ -161,7 +150,7 @@ class SessionRepository:
 
         return results
 
-    @with_session
+    @with_session()
     def _select_paginate(
         self,
         model: Type[T],
@@ -175,9 +164,9 @@ class SessionRepository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> Tuple[List[T], str]:
-        query = current_session.query(model)
+        query = session.query(model)
 
         return self._select_paginate_query(
             query=query,
@@ -240,7 +229,7 @@ class SessionRepository:
 
         return results, pagination
 
-    @with_session
+    @with_session()
     def _update_all(
         self,
         model: Type[T],
@@ -248,12 +237,12 @@ class SessionRepository:
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> List[T]:
         rows = self._select_all(
             model=model,
             filters=filters,
-            current_session=current_session,
+            session=session,
         )
 
         if len(rows) == 0:
@@ -264,15 +253,15 @@ class SessionRepository:
                 setattr(row, key, value)
 
         if flush:
-            current_session.flush()
+            session.flush()
         if commit:
-            current_session.commit()
+            session.commit()
 
-        [current_session.refresh(row) for row in rows]
+        [session.refresh(row) for row in rows]
 
         return rows
 
-    @with_session
+    @with_session()
     def _update(
         self,
         model: Type[T],
@@ -280,12 +269,12 @@ class SessionRepository:
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> T:
         row = self._select(
             model=model,
             filters=filters,
-            current_session=current_session,
+            session=session,
         )
 
         if row is None:
@@ -295,76 +284,76 @@ class SessionRepository:
             setattr(row, key, value)
 
         if flush:
-            current_session.flush()
+            session.flush()
         if commit:
-            current_session.commit()
+            session.commit()
 
-        current_session.refresh(row)
+        session.refresh(row)
 
         return row
 
-    @with_session
+    @with_session()
     def _add_all(
         self,
         data: List[T],
         flush: bool = False,
         commit: bool = False,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> List[T]:
-        current_session.add_all(data)
+        session.add_all(data)
         if flush:
-            current_session.flush()
+            session.flush()
         if commit:
-            current_session.commit()
+            session.commit()
 
         if flush or commit:
-            [current_session.refresh(item) for item in data]
+            [session.refresh(item) for item in data]
 
         return data
 
-    @with_session
+    @with_session()
     def _add(
         self,
         data: T,
         flush: bool = False,
         commit: bool = False,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> T:
-        current_session.add(data)
+        session.add(data)
         if flush:
-            current_session.flush()
+            session.flush()
         if commit:
-            current_session.commit()
+            session.commit()
 
         if flush or commit:
-            current_session.refresh(data)
+            session.refresh(data)
 
         return data
 
-    @with_session
+    @with_session()
     def _delete(
         self,
         model: T,
         filters: Optional[_FilterType] = None,
         flush: bool = True,
         commit: bool = False,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> bool:
         rows: List = self._select_all(
             model=model,
             filters=filters,
-            current_session=current_session,
+            session=session,
         )
 
         if len(rows) == 0:
             return False
 
         for row in rows:
-            current_session.delete(row)
+            session.delete(row)
 
         if flush:
-            current_session.flush()
+            session.flush()
         if commit:
-            current_session.commit()
+            session.commit()
 
         return True
