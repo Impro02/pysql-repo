@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.4.3"
+version = "0.4.4"
 
 setup(
     name="session-repository",
@@ -15,7 +15,7 @@ setup(
     license="MIT",
     author="Maxime MARTIN",
     author_email="maxime.martin02@hotmail.fr",
-    description="A project to have a base repository class to permform select/insert/update/delete with dynamtic syntaxe",
+    description="A project to have a base repository class to perform select/insert/update/delete with dynamic syntax",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/Impro02/session-repository",
