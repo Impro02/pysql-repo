@@ -6,7 +6,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Optional,
     Tuple,
     Union,
 )
@@ -199,9 +198,9 @@ def get_conditions_from_dict(
 ):
     conditions = []
     for key, value in values.items():
-        if type(value) == set:
+        if type(value) is set:
             value = list(value)
-        elif type(value) == dict:
+        elif type(value) is dict:
             for k, v in value.items():
                 if with_optional and v is None:
                     continue
@@ -358,7 +357,7 @@ def get_filters(
 
     conditions = []
     for filter_c in filters:
-        if not type(filter_c) == dict:
+        if type(filter_c) is not dict:
             continue
 
         conditions_from_dict = get_conditions_from_dict(
