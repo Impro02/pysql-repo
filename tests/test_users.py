@@ -341,19 +341,77 @@ class TestUsers(TestCustom):
         )
 
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
-    def test_additional_zip_code_sup(self, expected_data, saved_path):
+    def test_with_zip_codes_not_in(self, expected_data, saved_path):
         # GIVEN
-        additional_zip_code_sup = 300
+        zip_codes_not_in = [121]
 
         # WHEN
-        users = self._user_service.get_users(
-            additional_zip_code_sup=additional_zip_code_sup
+        users = self._user_service.get_users(zip_codes_not_in=zip_codes_not_in)
+        users_dict = [item.model_dump() for item in users]
+
+        self.save_data_json(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestUsersPaginate(TestCustom):
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_with_zip_codes_not_in(self, expected_data, saved_path):
+        # GIVEN
+        expected_pagination = '{"total": 2, "page": 1, "per_page": 2, "total_pages": 1}'
+
+        zip_codes_not_in = [290]
+        page = 1
+        per_page = 2
+
+        # WHEN
+        users, paginate = self._user_service.get_users_paginate(
+            page=page,
+            per_page=per_page,
+            zip_codes_not_in=zip_codes_not_in,
         )
         users_dict = [item.model_dump() for item in users]
 
         self.save_data_json(saved_path, users_dict)
 
         # THEN
+        self.assertEqual(
+            expected_pagination,
+            paginate,
+        )
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_with_zip_codes_in(self, expected_data, saved_path):
+        # GIVEN
+        expected_pagination = '{"total": 3, "page": 1, "per_page": 2, "total_pages": 2}'
+
+        zip_codes_in = [9898, 876, 290]
+        page = 1
+        per_page = 2
+
+        # WHEN
+        users, paginate = self._user_service.get_users_paginate(
+            page=page,
+            per_page=per_page,
+            zip_codes_in=zip_codes_in,
+        )
+        users_dict = [item.model_dump() for item in users]
+
+        self.save_data_json(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_pagination,
+            paginate,
+        )
         self.assertEqual(
             expected_data,
             users_dict,

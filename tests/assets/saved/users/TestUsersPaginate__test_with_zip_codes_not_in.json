@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1,
+        "email": "foo@test.com",
+        "hashed_password": "zoo",
+        "full_name": " foo bar",
+        "is_active": true,
+        "addresses": [
+            {
+                "id": 2,
+                "street": "Boo Avenue",
+                "zip_code": 121,
+                "city": {
+                    "id": 2,
+                    "name": "Seatle",
+                    "state": "WA"
+                }
+            },
+            {
+                "id": 1,
+                "street": "Foo Avenue",
+                "zip_code": 9898,
+                "city": {
+                    "id": 1,
+                    "name": "New York",
+                    "state": "NY"
+                }
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "email": "zoo@test.com",
+        "hashed_password": "uoo",
+        "full_name": " poo nar",
+        "is_active": true,
+        "addresses": [
+            {
+                "id": 4,
+                "street": "Poo Avenue",
+                "zip_code": 876,
+                "city": {
+                    "id": 1,
+                    "name": "New York",
+                    "state": "NY"
+                }
+            }
+        ]
+    }
+]

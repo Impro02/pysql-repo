@@ -11,7 +11,7 @@ from session_repository import Operators, SessionRepository
 # CONTEXTLIB
 from contextlib import AbstractContextManager
 from session_repository.enum import LoadingTechnique
-from session_repository.utils import RelationshipOption, SpecificJoin
+from session_repository.utils import RelationshipOption
 
 # MODEL
 from tests.models.database.database import Address, User
@@ -41,8 +41,9 @@ class UserRepository(SessionRepository):
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
         email_idifferent: Optional[str] = None,
+        zip_codes_in: Optional[List[str]] = None,
+        zip_codes_not_in: Optional[List[str]] = None,
         is_active_equal: Optional[bool] = None,
-        zip_codes_any: Optional[List[str]] = None,
     ) -> Dict[Column, Any]:
         return {
             User.id: {
@@ -69,7 +70,8 @@ class UserRepository(SessionRepository):
             User.addresses: {
                 Operators.ANY: {
                     Address.zip_code: {
-                        Operators.IN: zip_codes_any,
+                        Operators.IN: zip_codes_in,
+                        Operators.NOT_IN: zip_codes_not_in,
                     },
                 }
             },
@@ -80,17 +82,22 @@ class UserRepository(SessionRepository):
         cls,
         load_addresses: bool = False,
         load_city: bool = False,
-        additional_zip_code_sup: Optional[int] = None,
+        zip_codes_not_in: Optional[List[int]] = None,
+        zip_codes_in: Optional[List[int]] = None,
     ):
+        extra_join_addresses = []
+        if zip_codes_not_in:
+            extra_join_addresses.append(Address.zip_code.not_in(zip_codes_not_in))
+        if zip_codes_in:
+            extra_join_addresses.append(Address.zip_code.in_(zip_codes_in))
+
         return {
             User.addresses: RelationshipOption(
                 lazy=LoadingTechnique.JOINED
                 if load_addresses
                 else LoadingTechnique.NOLOAD,
-                specific_join=SpecificJoin(
-                    extra_conditions=(Address.zip_code > additional_zip_code_sup),
-                )
-                if additional_zip_code_sup
+                added_criteria=extra_join_addresses
+                if len(extra_join_addresses) > 0
                 else None,
                 children={
                     Address.city: RelationshipOption(
@@ -118,11 +125,11 @@ class UserRepository(SessionRepository):
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
         email_idifferent: Optional[str] = None,
+        zip_codes_in: Optional[List[int]] = None,
+        zip_codes_not_in: Optional[List[int]] = None,
         is_active_equal: Optional[bool] = None,
-        zip_codes_any: Optional[List[int]] = None,
         load_addresses: bool = True,
         load_city: bool = True,
-        additional_zip_code_sup: Optional[int] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
         session: Optional[Session] = None,
@@ -145,13 +152,15 @@ class UserRepository(SessionRepository):
                 email_iequal=email_iequal,
                 email_different=email_different,
                 email_idifferent=email_idifferent,
+                zip_codes_in=zip_codes_in,
+                zip_codes_not_in=zip_codes_not_in,
                 is_active_equal=is_active_equal,
-                zip_codes_any=zip_codes_any,
             ),
             relationship_options=self.__get_relationship_options(
                 load_addresses=load_addresses,
                 load_city=load_city,
-                additional_zip_code_sup=additional_zip_code_sup,
+                zip_codes_in=zip_codes_in,
+                zip_codes_not_in=zip_codes_not_in,
             ),
             order_by=order_by,
             direction=direction,
@@ -177,11 +186,11 @@ class UserRepository(SessionRepository):
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
         email_idifferent: Optional[str] = None,
+        zip_codes_in: Optional[List[int]] = None,
+        zip_codes_not_in: Optional[List[int]] = None,
         is_active_equal: Optional[bool] = None,
-        zip_codes_any: Optional[List[int]] = None,
         load_addresses: bool = True,
         load_city: bool = True,
-        additional_zip_code_sup: Optional[int] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
         session: Optional[Session] = None,
@@ -204,13 +213,15 @@ class UserRepository(SessionRepository):
                 email_iequal=email_iequal,
                 email_different=email_different,
                 email_idifferent=email_idifferent,
+                zip_codes_in=zip_codes_in,
+                zip_codes_not_in=zip_codes_not_in,
                 is_active_equal=is_active_equal,
-                zip_codes_any=zip_codes_any,
             ),
             relationship_options=self.__get_relationship_options(
                 load_addresses=load_addresses,
                 load_city=load_city,
-                additional_zip_code_sup=additional_zip_code_sup,
+                zip_codes_in=zip_codes_in,
+                zip_codes_not_in=zip_codes_not_in,
             ),
             order_by=order_by,
             direction=direction,

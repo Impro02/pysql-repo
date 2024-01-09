@@ -10,7 +10,7 @@ from session_repository.decorators import with_session
 from session_repository.models.service import SessionService
 
 # REPOSITORIES
-from tests.repositories.user_repositoy import UserRepository
+from tests.repositories.user_repository import UserRepository
 
 # MODELS
 from tests.models.schemas.user import UserRead
@@ -44,11 +44,11 @@ class UserService(SessionService[UserRepository]):
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
         email_idifferent: Optional[str] = None,
-        is_active: Optional[bool] = None,
-        zip_codes_any: Optional[List[str]] = None,
+        zip_codes_in: Optional[List[int]] = None,
+        zip_codes_not_in: Optional[List[int]] = None,
+        is_active_equal: Optional[bool] = None,
         load_addresses: bool = True,
         load_city: bool = True,
-        additional_zip_code_sup: Optional[int] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
         session: Optional[Session] = None,
@@ -68,11 +68,11 @@ class UserService(SessionService[UserRepository]):
             email_iequal=email_iequal,
             email_different=email_different,
             email_idifferent=email_idifferent,
-            is_active_equal=is_active,
-            zip_codes_any=zip_codes_any,
+            zip_codes_in=zip_codes_in,
+            zip_codes_not_in=zip_codes_not_in,
+            is_active_equal=is_active_equal,
             load_addresses=load_addresses,
             load_city=load_city,
-            additional_zip_code_sup=additional_zip_code_sup,
             order_by=order_by,
             direction=direction,
             session=session,
@@ -99,11 +99,11 @@ class UserService(SessionService[UserRepository]):
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
         email_idifferent: Optional[str] = None,
-        is_active: Optional[bool] = None,
-        zip_codes_any: Optional[List[str]] = None,
+        zip_codes_in: Optional[List[int]] = None,
+        zip_codes_not_in: Optional[List[int]] = None,
+        is_active_equal: Optional[bool] = None,
         load_addresses: bool = True,
         load_city: bool = True,
-        additional_zip_code_sup: Optional[int] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
         session: Optional[Session] = None,
@@ -125,11 +125,11 @@ class UserService(SessionService[UserRepository]):
             email_iequal=email_iequal,
             email_different=email_different,
             email_idifferent=email_idifferent,
-            is_active_equal=is_active,
-            zip_codes_any=zip_codes_any,
+            zip_codes_in=zip_codes_in,
+            zip_codes_not_in=zip_codes_not_in,
+            is_active_equal=is_active_equal,
             load_addresses=load_addresses,
             load_city=load_city,
-            additional_zip_code_sup=additional_zip_code_sup,
             order_by=order_by,
             direction=direction,
             session=session,

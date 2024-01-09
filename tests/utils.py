@@ -7,7 +7,7 @@ from unittest import TestCase
 
 from tests.database import Database
 from tests.models.database.database import Address, Base, City, User
-from tests.repositories.user_repositoy import UserRepository
+from tests.repositories.user_repository import UserRepository
 from tests.services.user_service import UserService
 
 
