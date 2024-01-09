@@ -41,7 +41,7 @@ class SessionRepository:
     def _build_query(
         self,
         query: Query,
-        model: Optional[Type[_T]],
+        model: Optional[Type[_T]] = None,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         relationship_options: Optional[
