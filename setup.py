@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.4.5.1"
+version = "0.4.5.2"
 
 setup(
     name="session-repository",
