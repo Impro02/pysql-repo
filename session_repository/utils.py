@@ -8,11 +8,14 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Type,
+    TypeVar,
     Union,
 )
 
 # SQLALCHEMY
 from sqlalchemy import ColumnExpressionArgument, and_, asc, desc, tuple_, func
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     Session,
     Query,
@@ -32,6 +35,8 @@ from session_repository.enum import LoadingTechnique, Operators
 
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 
+_T = TypeVar("_T", bound=declarative_base())
+
 
 @dataclass
 class RelationshipOption:
@@ -42,7 +47,7 @@ class RelationshipOption:
 
 def apply_distinct(
     session: Session,
-    model: Any,
+    model: Type[_T],
     distinct: ColumnExpressionArgument,
 ) -> Query:
     return (
@@ -136,7 +141,7 @@ def apply_filters(
 
 def apply_order_by(
     query: Query,
-    model,
+    model: Type[_T],
     order_by: Union[List[str], str],
     direction: Union[List[str], str],
 ):

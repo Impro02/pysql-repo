@@ -25,7 +25,7 @@ from session_repository.utils import (
 )
 
 
-T = TypeVar("T", bound=declarative_base())
+_T = TypeVar("_T", bound=declarative_base())
 
 
 class SessionRepository:
@@ -41,7 +41,7 @@ class SessionRepository:
     def _build_query(
         self,
         query: Query,
-        model: Type[T],
+        model: Optional[Type[_T]],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         relationship_options: Optional[
@@ -80,7 +80,7 @@ class SessionRepository:
     def _build_query_paginate(
         self,
         query: Query,
-        model: Type[T],
+        model: Type[_T],
         page: int,
         per_page: int,
         filters: Optional[_FilterType] = None,
@@ -112,7 +112,7 @@ class SessionRepository:
     @with_session()
     def _select(
         self,
-        model: Type[T],
+        model: Type[_T],
         distinct: Optional[ColumnExpressionArgument] = None,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
@@ -120,7 +120,7 @@ class SessionRepository:
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         session: Optional[Session] = None,
-    ) -> Optional[T]:
+    ) -> Optional[_T]:
         query = apply_distinct(
             session=session,
             model=model,
@@ -155,7 +155,7 @@ class SessionRepository:
     @with_session()
     def _select_all(
         self,
-        model: Type[T],
+        model: Type[_T],
         distinct: Optional[List[ColumnExpressionArgument]] = None,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
@@ -166,7 +166,7 @@ class SessionRepository:
         direction: Optional[str] = None,
         limit: int = None,
         session: Optional[Session] = None,
-    ) -> List[T]:
+    ) -> List[_T]:
         query = apply_distinct(
             session=session,
             model=model,
@@ -187,7 +187,7 @@ class SessionRepository:
     def _select_all_query(
         self,
         query: Query,
-        model: Type[T],
+        model: Type[_T],
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         relationship_options: Optional[
@@ -196,7 +196,7 @@ class SessionRepository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
-    ) -> List[T]:
+    ) -> List[_T]:
         query = self._build_query(
             query=query,
             model=model,
@@ -213,7 +213,7 @@ class SessionRepository:
     @with_session()
     def _select_paginate(
         self,
-        model: Type[T],
+        model: Type[_T],
         page: int,
         per_page: int,
         distinct: Optional[ColumnExpressionArgument] = None,
@@ -226,7 +226,7 @@ class SessionRepository:
         direction: Optional[str] = None,
         limit: int = None,
         session: Optional[Session] = None,
-    ) -> Tuple[List[T], str]:
+    ) -> Tuple[List[_T], str]:
         query = apply_distinct(
             session=session,
             model=model,
@@ -249,7 +249,7 @@ class SessionRepository:
     def _select_paginate_query(
         self,
         query: Query,
-        model: Type[T],
+        model: Type[_T],
         page: int,
         per_page: int,
         filters: Optional[_FilterType] = None,
@@ -260,7 +260,7 @@ class SessionRepository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-    ) -> Tuple[List[T], str]:
+    ) -> Tuple[List[_T], str]:
         query, pagination = self._build_query_paginate(
             query=query,
             model=model,
@@ -279,13 +279,13 @@ class SessionRepository:
     @with_session()
     def _update_all(
         self,
-        model: Type[T],
+        model: Type[_T],
         values: Dict,
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> List[T]:
+    ) -> List[_T]:
         rows = self._select_all(
             model=model,
             filters=filters,
@@ -311,13 +311,13 @@ class SessionRepository:
     @with_session()
     def _update(
         self,
-        model: Type[T],
+        model: Type[_T],
         values: Dict,
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> T:
+    ) -> _T:
         row = self._select(
             model=model,
             filters=filters,
@@ -342,11 +342,11 @@ class SessionRepository:
     @with_session()
     def _add_all(
         self,
-        data: List[T],
+        data: List[_T],
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> List[T]:
+    ) -> List[_T]:
         session.add_all(data)
         if flush:
             session.flush()
@@ -361,11 +361,11 @@ class SessionRepository:
     @with_session()
     def _add(
         self,
-        data: T,
+        data: _T,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> T:
+    ) -> _T:
         session.add(data)
         if flush:
             session.flush()
@@ -380,7 +380,7 @@ class SessionRepository:
     @with_session()
     def _delete(
         self,
-        model: T,
+        model: Type[_T],
         filters: Optional[_FilterType] = None,
         flush: bool = True,
         commit: bool = False,
