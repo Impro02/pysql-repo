@@ -1,6 +1,9 @@
 from setuptools import setup
 
-version = "0.4.5.2"
+version = "0.4.5.3"
+
+with open("requirements.txt") as f:
+    required_packages = f.read().splitlines()
 
 setup(
     name="session-repository",
@@ -9,9 +12,7 @@ setup(
         "session_repository",
         "session_repository.models",
     ],
-    install_requires=[
-        "sqlalchemy",
-    ],
+    install_requires=required_packages,
     license="MIT",
     author="Maxime MARTIN",
     author_email="maxime.martin02@hotmail.fr",
