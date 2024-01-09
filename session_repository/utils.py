@@ -6,13 +6,15 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Optional,
     Tuple,
     Union,
 )
 
 # SQLALCHEMY
-from sqlalchemy import and_, asc, desc, tuple_, func
+from sqlalchemy import ColumnExpressionArgument, and_, asc, desc, tuple_, func
 from sqlalchemy.orm import (
+    Session,
     Query,
     noload,
     lazyload,
@@ -32,18 +34,22 @@ _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], A
 
 
 @dataclass
-class SpecificJoin:
-    extra_conditions: BinaryExpression
-    skip_lazy: bool = True
-    full_join: bool = False
-    is_outer_join: bool = False
-
-
-@dataclass
 class RelationshipOption:
     lazy: LoadingTechnique
-    specific_join: SpecificJoin = field(default=None)
+    added_criteria: Optional[BinaryExpression] = field(default=None)
     children: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
+
+
+def apply_distinct(
+    session: Session,
+    model: Any,
+    distinct: ColumnExpressionArgument,
+) -> Query:
+    return (
+        session.query(distinct.distinct())
+        if distinct is not None
+        else session.query(model)
+    )
 
 
 def apply_relationship_options(
@@ -52,26 +58,31 @@ def apply_relationship_options(
     parents: List[InstrumentedAttribute] = None,
 ):
     def get_load(
-        skip_lazy: bool,
         loading_technique: LoadingTechnique,
         items: List[InstrumentedAttribute],
+        extra_conditions: Optional[BinaryExpression] = None,
     ):
-        if skip_lazy:
-            return contains_eager(relationship)
-        elif loading_technique == LoadingTechnique.CONTAINS_EAGER:
-            return contains_eager(*items)
+        items_post = []
+        for item in items:
+            if extra_conditions is not None:
+                items_post.append(item.and_(*extra_conditions))
+            else:
+                items_post.append(item)
+
+        if loading_technique == LoadingTechnique.CONTAINS_EAGER:
+            return contains_eager(*items_post)
         elif loading_technique == LoadingTechnique.LAZY:
-            return lazyload(*items)
+            return lazyload(*items_post)
         elif loading_technique == LoadingTechnique.JOINED:
-            return joinedload(*items)
+            return joinedload(*items_post)
         elif loading_technique == LoadingTechnique.SUBQUERY:
-            return subqueryload(*items)
+            return subqueryload(*items_post)
         elif loading_technique == LoadingTechnique.SELECTIN:
-            return selectinload(*items)
+            return selectinload(*items_post)
         elif loading_technique == LoadingTechnique.RAISE:
-            return raiseload(*items)
+            return raiseload(*items_post)
         elif loading_technique == LoadingTechnique.NOLOAD:
-            return noload(*items)
+            return noload(*items_post)
 
         return None
 
@@ -91,20 +102,10 @@ def apply_relationship_options(
 
         sub_items = [relationship] if parents is None else [*parents, relationship]
 
-        skip_lazy = False
-        if (specific_join := sub_relationships.specific_join) is not None:
-            skip_lazy = specific_join.skip_lazy
-
-            query = query.join(
-                relationship.and_(specific_join.extra_conditions),
-                isouter=specific_join.is_outer_join,
-                full=specific_join.full_join,
-            )
-
         load = get_load(
-            skip_lazy=skip_lazy,
             loading_technique=sub_relationships.lazy,
             items=sub_items,
+            extra_conditions=sub_relationships.added_criteria,
         )
 
         if load is not None:
@@ -195,7 +196,7 @@ def apply_limit(
 def get_conditions_from_dict(
     values: _FilterType,
     with_optional: bool = False,
-):
+) -> List[ColumnExpressionArgument]:
     conditions = []
     for key, value in values.items():
         if type(value) is set:

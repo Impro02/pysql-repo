@@ -1,8 +1,9 @@
 # MODULES
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
-# CONNTEXTLIB
+# CONTEXTLIB
 from contextlib import AbstractContextManager
+from sqlalchemy import ColumnExpressionArgument
 
 # SQLALCHEMY
 from sqlalchemy.ext.declarative import declarative_base
@@ -15,6 +16,7 @@ from session_repository.decorators import with_session
 from session_repository.utils import (
     _FilterType,
     RelationshipOption,
+    apply_distinct,
     apply_relationship_options,
     apply_filters,
     apply_order_by,
@@ -36,10 +38,82 @@ class SessionRepository:
     def session_manager(self):
         return self._session_factory()
 
+    def _build_query(
+        self,
+        query: Query,
+        model: Type[T],
+        filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
+        order_by: Optional[Union[List[str], str]] = None,
+        direction: Optional[Union[List[str], str]] = None,
+        limit: int = None,
+    ) -> Query:
+        query = apply_relationship_options(
+            query=query,
+            relationship_options=relationship_options,
+        )
+
+        query = apply_filters(
+            query=query,
+            filter_dict=filters,
+        )
+        query = apply_filters(
+            query=query,
+            filter_dict=optional_filters,
+            with_optional=True,
+        )
+        query = apply_order_by(
+            query=query,
+            model=model,
+            order_by=order_by,
+            direction=direction,
+        )
+
+        return apply_limit(
+            query=query,
+            limit=limit,
+        )
+
+    def _build_query_paginate(
+        self,
+        query: Query,
+        model: Type[T],
+        page: int,
+        per_page: int,
+        filters: Optional[_FilterType] = None,
+        optional_filters: Optional[_FilterType] = None,
+        relationship_options: Optional[
+            Dict[InstrumentedAttribute, RelationshipOption]
+        ] = None,
+        order_by: Optional[Union[List[str], str]] = None,
+        direction: Optional[Union[List[str], str]] = None,
+        limit: int = None,
+    ) -> Tuple[Query, str]:
+        query = self._build_query(
+            query=query,
+            model=model,
+            filters=filters,
+            optional_filters=optional_filters,
+            relationship_options=relationship_options,
+            order_by=order_by,
+            direction=direction,
+            limit=limit,
+        )
+
+        return apply_pagination(
+            query=query,
+            page=page,
+            per_page=per_page,
+        )
+
     @with_session()
     def _select(
         self,
         model: Type[T],
+        distinct: Optional[ColumnExpressionArgument] = None,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         relationship_options: Optional[
@@ -47,7 +121,11 @@ class SessionRepository:
         ] = None,
         session: Optional[Session] = None,
     ) -> Optional[T]:
-        query = session.query(model)
+        query = apply_distinct(
+            session=session,
+            model=model,
+            distinct=distinct,
+        )
 
         return self._select_query(
             query=query,
@@ -65,27 +143,20 @@ class SessionRepository:
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
     ) -> Optional[Any]:
-        query = apply_relationship_options(
+        query = self._build_query(
             query=query,
+            filters=filters,
+            optional_filters=optional_filters,
             relationship_options=relationship_options,
         )
-        query = apply_filters(
-            query=query,
-            filter_dict=filters,
-        )
-        query = apply_filters(
-            query=query,
-            filter_dict=optional_filters,
-            with_optional=True,
-        )
-        result = query.first()
 
-        return result
+        return query.first()
 
     @with_session()
     def _select_all(
         self,
         model: Type[T],
+        distinct: Optional[List[ColumnExpressionArgument]] = None,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         relationship_options: Optional[
@@ -96,7 +167,11 @@ class SessionRepository:
         limit: int = None,
         session: Optional[Session] = None,
     ) -> List[T]:
-        query = session.query(model)
+        query = apply_distinct(
+            session=session,
+            model=model,
+            distinct=distinct,
+        )
 
         return self._select_all_query(
             query=query,
@@ -122,33 +197,18 @@ class SessionRepository:
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
     ) -> List[T]:
-        query = apply_relationship_options(
-            query=query,
-            relationship_options=relationship_options,
-        )
-        query = apply_filters(
-            query=query,
-            filter_dict=filters,
-        )
-        query = apply_filters(
-            query=query,
-            filter_dict=optional_filters,
-            with_optional=True,
-        )
-        query = apply_order_by(
+        query = self._build_query(
             query=query,
             model=model,
+            filters=filters,
+            optional_filters=optional_filters,
+            relationship_options=relationship_options,
             order_by=order_by,
             direction=direction,
-        )
-        query = apply_limit(
-            query=query,
             limit=limit,
         )
 
-        results = query.all()
-
-        return results
+        return query.all()
 
     @with_session()
     def _select_paginate(
@@ -156,6 +216,7 @@ class SessionRepository:
         model: Type[T],
         page: int,
         per_page: int,
+        distinct: Optional[ColumnExpressionArgument] = None,
         filters: Optional[_FilterType] = None,
         optional_filters: Optional[_FilterType] = None,
         relationship_options: Optional[
@@ -166,7 +227,11 @@ class SessionRepository:
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Tuple[List[T], str]:
-        query = session.query(model)
+        query = apply_distinct(
+            session=session,
+            model=model,
+            distinct=distinct,
+        )
 
         return self._select_paginate_query(
             query=query,
@@ -196,38 +261,20 @@ class SessionRepository:
         direction: Optional[str] = None,
         limit: int = None,
     ) -> Tuple[List[T], str]:
-        query = apply_relationship_options(
-            query=query,
-            relationship_options=relationship_options,
-        )
-        query = apply_filters(
-            query=query,
-            filter_dict=filters,
-        )
-        query = apply_filters(
-            query=query,
-            filter_dict=optional_filters,
-            with_optional=True,
-        )
-        query = apply_order_by(
+        query, pagination = self._build_query_paginate(
             query=query,
             model=model,
-            order_by=order_by,
-            direction=direction,
-        )
-        query = apply_limit(
-            query=query,
-            limit=limit,
-        )
-        query, pagination = apply_pagination(
-            query=query,
             page=page,
             per_page=per_page,
+            filters=filters,
+            optional_filters=optional_filters,
+            relationship_options=relationship_options,
+            order_by=order_by,
+            direction=direction,
+            limit=limit,
         )
 
-        results = query.all()
-
-        return results, pagination
+        return query.all(), pagination
 
     @with_session()
     def _update_all(
