@@ -3,9 +3,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Un
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager
-from sqlalchemy import ColumnExpressionArgument
 
 # SQLALCHEMY
+from sqlalchemy import ColumnExpressionArgument
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, InstrumentedAttribute, Query
 
@@ -17,6 +17,7 @@ from session_repository.utils import (
     _FilterType,
     RelationshipOption,
     apply_distinct,
+    apply_group_by,
     apply_relationship_options,
     apply_filters,
     apply_order_by,
@@ -47,6 +48,7 @@ class SessionRepository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
+        group_by: Optional[ColumnExpressionArgument] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
@@ -65,6 +67,12 @@ class SessionRepository:
             filter_dict=optional_filters,
             with_optional=True,
         )
+
+        query = apply_group_by(
+            query=query,
+            group_by=group_by,
+        )
+
         query = apply_order_by(
             query=query,
             model=model,
@@ -88,6 +96,7 @@ class SessionRepository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
+        group_by: Optional[ColumnExpressionArgument] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
@@ -98,6 +107,7 @@ class SessionRepository:
             filters=filters,
             optional_filters=optional_filters,
             relationship_options=relationship_options,
+            group_by=group_by,
             order_by=order_by,
             direction=direction,
             limit=limit,
@@ -142,12 +152,14 @@ class SessionRepository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
+        group_by: Optional[ColumnExpressionArgument] = None,
     ) -> Optional[Any]:
         query = self._build_query(
             query=query,
             filters=filters,
             optional_filters=optional_filters,
             relationship_options=relationship_options,
+            group_by=group_by,
         )
 
         return query.first()
@@ -193,6 +205,7 @@ class SessionRepository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
+        group_by: Optional[ColumnExpressionArgument] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
@@ -203,6 +216,7 @@ class SessionRepository:
             filters=filters,
             optional_filters=optional_filters,
             relationship_options=relationship_options,
+            group_by=group_by,
             order_by=order_by,
             direction=direction,
             limit=limit,
@@ -257,6 +271,7 @@ class SessionRepository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
+        group_by: Optional[ColumnExpressionArgument] = None,
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
@@ -269,6 +284,7 @@ class SessionRepository:
             filters=filters,
             optional_filters=optional_filters,
             relationship_options=relationship_options,
+            group_by=group_by,
             order_by=order_by,
             direction=direction,
             limit=limit,

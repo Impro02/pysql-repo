@@ -57,6 +57,13 @@ def apply_distinct(
     )
 
 
+def apply_group_by(
+    query: Query,
+    group_by: ColumnExpressionArgument,
+) -> Query:
+    return query.group_by(group_by) if group_by else query
+
+
 def apply_relationship_options(
     query: Query,
     relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
@@ -353,7 +360,7 @@ def get_conditions_from_dict(
 def get_filters(
     filters: _FilterType,
     with_optional: bool = False,
-):
+) -> List[ColumnExpressionArgument]:
     if filters is None:
         return []
     if not isinstance(filters, dict):
