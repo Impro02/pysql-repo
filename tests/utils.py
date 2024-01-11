@@ -63,15 +63,19 @@ class SavedPath:
 class TestCustom(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        database_path = os.path.join(
-            os.path.abspath(os.getcwd()),
-            "tests",
-            "databases",
-            "tests.sqlite",
+        cls._database_path = (
+            Path(os.path.expanduser("~"))
+            / "fastapi"
+            / "session-repository"
+            / "back"
+            / "src"
         )
+
+        cls._database_path.mkdir(parents=True, exist_ok=True)
+
         cls._database = Database(
             databases_config={
-                "connection_string": f"sqlite:///{database_path}",
+                "connection_string": f"sqlite:///{cls._database_path}/tests.sqlite",
                 "ini": True,
                 "init_database_dir_json": os.path.join(
                     os.path.abspath(os.getcwd()),
