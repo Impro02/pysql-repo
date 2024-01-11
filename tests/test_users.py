@@ -324,7 +324,7 @@ class TestUsers(TestCustom):
         )
 
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
-    def test_no_load_adresses(self, expected_data, saved_path):
+    def test_no_load_addresses(self, expected_data, saved_path):
         # GIVEN
         load_addresses = False
 
