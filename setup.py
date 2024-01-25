@@ -6,11 +6,11 @@ with open("requirements.txt") as f:
     required_packages = f.read().splitlines()
 
 setup(
-    name="session-repository",
+    name="pysql-repo",
     version=version,
     packages=[
-        "session_repository",
-        "session_repository.models",
+        "pysql-repo",
+        "pysql-repo.libs",
     ],
     install_requires=required_packages,
     license="MIT",
@@ -19,8 +19,8 @@ setup(
     description="A project to have a base repository class to perform select/insert/update/delete with dynamic syntax",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/Impro02/session-repository",
-    download_url="https://github.com/Impro02/session-repository/archive/refs/tags/%s.tar.gz"
+    url="https://github.com/Impro02/pysql-repo",
+    download_url="https://github.com/Impro02/pysql-repo/archive/refs/tags/%s.tar.gz"
     % version,
     classifiers=[
         "Development Status :: 3 - Alpha",

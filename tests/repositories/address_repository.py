@@ -5,8 +5,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from sqlalchemy import Column
 from sqlalchemy.orm import Session
 
-# SESSION_REPOSITORY
-from session_repository import Operators, SessionRepository
+# PYSQL_REPO
+from pysql_repo import Operators, SessionRepository
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager

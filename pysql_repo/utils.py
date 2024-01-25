@@ -14,11 +14,21 @@ from typing import (
 )
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, and_, asc, desc, tuple_, func
+from sqlalchemy import (
+    ColumnExpressionArgument,
+    Select,
+    and_,
+    asc,
+    desc,
+    select,
+    distinct,
+    tuple_,
+    func,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     Session,
-    Query,
     noload,
     lazyload,
     joinedload,
@@ -31,11 +41,14 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import Null, BinaryExpression
 
 # Enum
-from session_repository.enum import LoadingTechnique, Operators
+from pysql_repo.enum import LoadingTechnique, Operators
 
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 
 _T = TypeVar("_T", bound=declarative_base())
+
+
+_Select = Union[Select[Tuple], Select[Tuple[_T]]]
 
 
 @dataclass
@@ -45,30 +58,71 @@ class RelationshipOption:
     children: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
 
 
-def apply_distinct(
-    session: Session,
-    model: Type[_T],
-    distinct: ColumnExpressionArgument,
-) -> Query:
-    return (
-        session.query(distinct.distinct())
-        if distinct is not None
-        else session.query(model)
+def build_query(
+    stmt: Select,
+    model: Optional[Type[_T]] = None,
+    filters: Optional[_FilterType] = None,
+    optional_filters: Optional[_FilterType] = None,
+    relationship_options: Optional[
+        Dict[InstrumentedAttribute, RelationshipOption]
+    ] = None,
+    group_by: Optional[ColumnExpressionArgument] = None,
+    order_by: Optional[Union[List[str], str]] = None,
+    direction: Optional[Union[List[str], str]] = None,
+    limit: int = None,
+) -> _Select:
+    stmt = apply_relationship_options(
+        stmt=stmt,
+        relationship_options=relationship_options,
+    )
+
+    stmt = apply_filters(
+        stmt=stmt,
+        filter_dict=filters,
+    )
+    stmt = apply_filters(
+        stmt=stmt,
+        filter_dict=optional_filters,
+        with_optional=True,
+    )
+
+    stmt = apply_group_by(
+        stmt=stmt,
+        group_by=group_by,
+    )
+
+    stmt = apply_order_by(
+        stmt=stmt,
+        model=model,
+        order_by=order_by,
+        direction=direction,
+    )
+
+    return apply_limit(
+        stmt=stmt,
+        limit=limit,
     )
 
 
+def select_distinct(
+    model: Type[_T],
+    expr: ColumnExpressionArgument,
+) -> _Select:
+    return select(distinct(expr)) if expr is not None else select(model)
+
+
 def apply_group_by(
-    query: Query,
+    stmt: _Select,
     group_by: ColumnExpressionArgument,
-) -> Query:
-    return query.group_by(group_by) if group_by else query
+) -> _Select:
+    return stmt.group_by(group_by) if group_by is not None else stmt
 
 
 def apply_relationship_options(
-    query: Query,
+    stmt: _Select,
     relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
     parents: List[InstrumentedAttribute] = None,
-):
+) -> _Select:
     def get_load(
         loading_technique: LoadingTechnique,
         items: List[InstrumentedAttribute],
@@ -99,7 +153,7 @@ def apply_relationship_options(
         return None
 
     if relationship_options is None:
-        return query
+        return stmt
 
     for relationship, sub_relationships in relationship_options.items():
         if any(
@@ -121,39 +175,39 @@ def apply_relationship_options(
         )
 
         if load is not None:
-            query = query.options(load)
+            stmt = stmt.options(load)
 
         if (children := sub_relationships.children) is not None:
-            query = apply_relationship_options(
-                query,
+            stmt = apply_relationship_options(
+                stmt,
                 relationship_options=children,
                 parents=sub_items,
             )
 
-    return query
+    return stmt
 
 
 def apply_filters(
-    query: Query,
+    stmt: _Select,
     filter_dict: _FilterType,
     with_optional: bool = False,
-):
+) -> _Select:
     filters = get_filters(
         filters=filter_dict,
         with_optional=with_optional,
     )
 
-    return query if len(filters) == 0 else query.filter(and_(*filters))
+    return stmt if len(filters) == 0 else stmt.filter(and_(*filters))
 
 
 def apply_order_by(
-    query: Query,
+    stmt: _Select,
     model: Type[_T],
     order_by: Union[List[str], str],
     direction: Union[List[str], str],
-):
+) -> _Select:
     if order_by is None or direction is None:
-        return query
+        return stmt
 
     if isinstance(order_by, str):
         order_by = [order_by]
@@ -171,38 +225,66 @@ def apply_order_by(
         elif dir == "asc":
             order_by_list.append(asc(getattr(model, column)))
 
-    return query.order_by(*order_by_list)
+    return stmt.order_by(*order_by_list)
 
 
 def apply_pagination(
-    query: Query,
+    session: Session,
+    stmt: _Select,
     page: int,
     per_page: int,
-):
-    pagination = None
-    if page is not None and per_page is not None:
-        total_results = query.count()
-        total_pages = (total_results + per_page - 1) // per_page
+) -> Tuple[_Select, str]:
+    if page is None or per_page is None:
+        return stmt, None
 
-        pagination = {
-            "total": total_results,
-            "page": page,
-            "per_page": per_page,
-            "total_pages": total_pages,
-        }
+    total_results = session.scalar(select(func.count()).select_from(stmt))
+    total_pages = (total_results + per_page - 1) // per_page
 
-        pagination = json.dumps(pagination)
+    pagination = {
+        "total": total_results,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": total_pages,
+    }
 
-        query = query.offset((page - 1) * per_page).limit(per_page)
+    pagination = json.dumps(pagination)
 
-    return query, pagination
+    stmt = stmt.offset((page - 1) * per_page).limit(per_page)
+
+    return stmt, pagination
+
+
+async def async_apply_pagination(
+    session: AsyncSession,
+    stmt: _Select,
+    page: int,
+    per_page: int,
+) -> Tuple[_Select, str]:
+    if page is None or per_page is None:
+        return stmt, None
+
+    total_results = await session.scalar(select(func.count()).select_from(stmt))
+    total_pages = (total_results + per_page - 1) // per_page
+
+    pagination = {
+        "total": total_results,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": total_pages,
+    }
+
+    pagination = json.dumps(pagination)
+
+    stmt = stmt.offset((page - 1) * per_page).limit(per_page)
+
+    return stmt, pagination
 
 
 def apply_limit(
-    query: Query,
+    stmt: _Select,
     limit: int,
-):
-    return query.limit(limit) if limit is not None else query
+) -> _Select:
+    return stmt.limit(limit) if limit is not None else stmt
 
 
 def get_conditions_from_dict(

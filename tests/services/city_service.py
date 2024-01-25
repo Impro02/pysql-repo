@@ -5,8 +5,8 @@ from typing import List, Optional, Tuple
 # SQLALCHEMY
 from sqlalchemy.orm import Session
 
-# SESSION_REPOSITORY
-from session_repository import SessionService, with_session
+# PYSQL_REPO
+from pysql_repo import SessionService, with_session
 
 # REPOSITORIES
 from tests.repositories.city_repository import CityRepository

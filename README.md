@@ -1,20 +1,20 @@
-The session-repository library is a Python library that is designed to use the session/repository pattern to interact with databases in Python projects. It provides a more flexible notation for running SQL queries and is built on top of SQLAlchemy, a popular Python SQL toolkit. With session-repository, users can write SQL queries using a new, more intuitive syntax, simplifying the process of working with SQL databases in Python and making it easier to write and maintain complex queries.
+The pysql-repo library is a Python library that is designed to use the session/repository pattern to interact with databases in Python projects. It provides a more flexible notation for running SQL queries and is built on top of SQLAlchemy, a popular Python SQL toolkit. With pysql_repo, users can write SQL queries using a new, more intuitive syntax, simplifying the process of working with SQL databases in Python and making it easier to write and maintain complex queries.
 
-## Installing Session-Repository
+## Installing pysql-repo
 
-To install session-repository, if you already have Python, you can install with:
-
-```
-pip install session-repository
-```
-
-## How to import Session-Repository
-
-To access session-repository and its functions import it in your Python code like this:
+To install pysql-repo, if you already have Python, you can install with:
 
 ```
-from session_repository import SessionRepository, SessionService, with_session, Operators, LoadingTechnique
-from session_repository.utils import RelationshipOption
+pip install pysql_repo
+```
+
+## How to import pysql-repo
+
+To access pysql-repo and its functions import it in your Python code like this:
+
+```
+from pysql_repo import SessionRepository, SessionService, with_session, Operators, LoadingTechnique
+from pysql_repo.utils import RelationshipOption
 ```
 
 ## Reading the example code
@@ -167,10 +167,10 @@ class UserRepository(SessionRepository):
         ids: Optional[List[int]] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> List[User]:
         users = self._select_all(
-            current_session=current_session,
+            session=session,
             model=User,
             optional_filters=self.__get_filters(
                 ids=ids;
@@ -189,7 +189,7 @@ class UserRepository(SessionRepository):
         ids: Optional[List[int]] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> Tuple[List[User], str]:
         users, pagination = self._select_paginate(
             page=page,
@@ -201,7 +201,7 @@ class UserRepository(SessionRepository):
             relationship_options=self.__get_relationship_options(),
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
+            session=session,
         )
 
         return users, pagination
@@ -209,10 +209,10 @@ class UserRepository(SessionRepository):
     def get_by_id(
         self,
         id: int,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> Optional[User]:
         user = self._select(
-            current_session=current_session,
+            session=session,
             model=User,
             filters={
                 User.id: {
@@ -226,10 +226,10 @@ class UserRepository(SessionRepository):
     def get_by_email(
         self,
         email: str,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> Optional[User]:
         user = self._select(
-            current_session=current_session,
+            session=session,
             model=User,
             filters={
                 User.email: {
@@ -245,7 +245,7 @@ class UserRepository(SessionRepository):
         data: UserCreateSchema,
         flush: bool = False,
         commit: bool = True,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> User:
         user = self._add(
             data=User(
@@ -257,7 +257,7 @@ class UserRepository(SessionRepository):
             ),
             flush=flush,
             commit=commit,
-            current_session=current_session,
+            session=session,
         )
 
         return user
@@ -268,10 +268,10 @@ class UserRepository(SessionRepository):
         is_active: bool,
         flush: bool = False,
         commit: bool = True,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> User:
         user = self._update(
-            current_session=current_session,
+            session=session,
             model=User,
             values={
                 User.is_active.key: is_active,
@@ -292,7 +292,7 @@ class UserRepository(SessionRepository):
         id: int,
         flush: bool = False,
         commit: bool = True,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> bool:
         is_deleted = self._delete(
             model=User,
@@ -303,7 +303,7 @@ class UserRepository(SessionRepository):
             },
             flush=flush,
             commit=commit,
-            current_session=current_session,
+            session=session,
         )
 
         return is_deleted
@@ -335,13 +335,13 @@ class UserService(SessionService[UserRepository]):
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
         schema: Type[T] = UserReadSchema,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> List[T]:
         users = self._repository.get_all(
             ids=ids,
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
+            session=session,
         )
 
         return [schema.model_validate(user) for user in users]
@@ -356,7 +356,7 @@ class UserService(SessionService[UserRepository]):
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
         schema: Type[T] = RecipeInspectionFviReadSchema,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> Tuple[List[T], str]:
         users, pagination = self._repository.get_paginate(
             page=page,
@@ -364,7 +364,7 @@ class UserService(SessionService[UserRepository]):
             ids=ids,
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
+            session=session,
         )
 
         return [schema.model_validate(user) for user in users], pagination
@@ -375,11 +375,11 @@ class UserService(SessionService[UserRepository]):
         self,
         id: int,
         schema: Type[T] = UserReadSchema,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> T:
         user = self._repository.get_by_id(
             id=id,
-            current_session=current_session,
+            session=session,
         )
 
         if user is None:
@@ -393,16 +393,16 @@ class UserService(SessionService[UserRepository]):
         data: UserCreateSchema,
         commit: bool = True,
         schema: Type[T] = UserReadSchema,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> T:
         user = self._repository.get_by_email(
             email=data.email,
-            current_session=current_session,
+            session=session,
         )
 
         if user is not None:
             self._logger.error(
-                "Unable to create new user beacuse email alrady used bu another one"
+                "Unable to create new user because email already used bu another one"
             )
 
             raise ValueError(
@@ -413,7 +413,7 @@ class UserService(SessionService[UserRepository]):
             data=data,
             flush=True,
             commit=False,
-            current_session=current_session,
+            session=session,
         )
 
         return schema.model_validate(user)
@@ -424,11 +424,11 @@ class UserService(SessionService[UserRepository]):
         self,
         id: int,
         commit: bool = True,
-        current_session: Optional[Session] = None,
+        session: Optional[Session] = None,
     ) -> bool:
         current_user = self._repository.get_by_id(
             id=id,
-            current_session=current_session,
+            session=session,
         )
 
         if current_user is None:
@@ -438,11 +438,11 @@ class UserService(SessionService[UserRepository]):
             id=id,
             flush=True,
             commit=False,
-            current_session=current_session,
+            session=session,
         )
 
         if commit:
-            current_session.commit()
+            session.commit()
 
         self._logger.info(
             f"User was successfully deleted"
