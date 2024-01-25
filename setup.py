@@ -9,8 +9,10 @@ setup(
     name="pysql-repo",
     version=version,
     packages=[
-        "pysql-repo",
-        "pysql-repo.libs",
+        "pysql_repo",
+        "pysql_repo.asyncio",
+        "pysql_repo.constants",
+        "pysql_repo.libs",
     ],
     install_requires=required_packages,
     license="MIT",
