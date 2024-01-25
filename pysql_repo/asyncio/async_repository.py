@@ -1,4 +1,5 @@
 # MODULES
+import asyncio
 from typing import (
     Callable,
     Dict,
@@ -13,43 +14,47 @@ from typing import (
 )
 
 # CONTEXTLIB
-from contextlib import AbstractContextManager
+from contextlib import AbstractAsyncContextManager
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, Row, Select, and_, insert, update
+from sqlalchemy import ColumnExpressionArgument, Row, Select, and_, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, joinedload
 
 # DECORATORS
-from pysql_repo.decorators import with_session
+from pysql_repo.asyncio.async_decorator import with_async_session
 
 # UTILS
 from pysql_repo.utils import (
     _FilterType,
     RelationshipOption,
+    apply_filters,
+    async_apply_pagination,
     build_select_stmt,
+    build_update_stmt,
     get_filters,
     select_distinct,
-    apply_pagination,
 )
+from tests.models.database.database import User
 
 
 _T = TypeVar("_T", bound=declarative_base())
 
 
-class Repository:
+class AsyncRepository:
     def __init__(
         self,
-        session_factory: Callable[..., AbstractContextManager[Session]],
+        session_factory: Callable[..., AbstractAsyncContextManager[AsyncSession]],
     ) -> None:
         self._session_factory = session_factory
 
     def session_manager(self):
         return self._session_factory()
 
-    def _build_query_paginate(
+    async def _build_query_paginate(
         self,
-        session: Session,
+        session: AsyncSession,
         stmt: Select[Tuple[_T]],
         model: Type[_T],
         page: int,
@@ -76,15 +81,15 @@ class Repository:
             limit=limit,
         )
 
-        return apply_pagination(
+        return await async_apply_pagination(
             session=session,
             stmt=stmt,
             page=page,
             per_page=per_page,
         )
 
-    @with_session()
-    def _select(
+    @with_async_session()
+    async def _select(
         self,
         model: Type[_T],
         distinct: Optional[ColumnExpressionArgument] = None,
@@ -93,14 +98,14 @@ class Repository:
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
         stmt = select_distinct(
             model=model,
             expr=distinct,
         )
 
-        return self._select_stmt(
+        return await self._select_stmt(
             stmt=stmt,
             filters=filters,
             optional_filters=optional_filters,
@@ -108,8 +113,8 @@ class Repository:
             session=session,
         )
 
-    @with_session()
-    def _select_stmt(
+    @with_async_session()
+    async def _select_stmt(
         self,
         stmt: Select[Tuple[_T]],
         filters: Optional[_FilterType] = None,
@@ -118,8 +123,8 @@ class Repository:
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         group_by: Optional[ColumnExpressionArgument] = None,
-        session: Optional[Session] = None,
-    ) -> Optional[_T]:
+        session: Optional[AsyncSession] = None,
+    ) -> Optional[Row[_T]]:
         stmt = build_select_stmt(
             stmt=stmt,
             filters=filters,
@@ -128,10 +133,12 @@ class Repository:
             group_by=group_by,
         )
 
-        return session.execute(stmt).unique().scalar_one_or_none()
+        result = await session.execute(stmt)
 
-    @with_session()
-    def _select_all(
+        return result.unique().scalar_one_or_none()
+
+    @with_async_session()
+    async def _select_all(
         self,
         model: Type[_T],
         distinct: Optional[List[ColumnExpressionArgument]] = None,
@@ -143,14 +150,14 @@ class Repository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
         stmt = select_distinct(
             model=model,
             expr=distinct,
         )
 
-        return self._select_all_stmt(
+        return await self._select_all_stmt(
             stmt=stmt,
             model=model,
             filters=filters,
@@ -162,8 +169,8 @@ class Repository:
             session=session,
         )
 
-    @with_session()
-    def _select_all_stmt(
+    @with_async_session()
+    async def _select_all_stmt(
         self,
         stmt: Select[Tuple[_T]],
         model: Type[_T],
@@ -176,7 +183,7 @@ class Repository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
         stmt = build_select_stmt(
             stmt=stmt,
@@ -190,10 +197,12 @@ class Repository:
             limit=limit,
         )
 
-        return session.execute(stmt).scalars().unique().all()
+        result = await session.execute(stmt)
 
-    @with_session()
-    def _select_paginate(
+        return result.scalars().unique().all()
+
+    @with_async_session()
+    async def _select_paginate(
         self,
         model: Type[_T],
         page: int,
@@ -207,14 +216,14 @@ class Repository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
         stmt = select_distinct(
             model=model,
             expr=distinct,
         )
 
-        return self._select_paginate_stmt(
+        return await self._select_paginate_stmt(
             stmt=stmt,
             model=model,
             page=page,
@@ -228,8 +237,8 @@ class Repository:
             session=session,
         )
 
-    @with_session()
-    def _select_paginate_stmt(
+    @with_async_session()
+    async def _select_paginate_stmt(
         self,
         stmt: Select[Tuple[_T]],
         model: Type[_T],
@@ -244,9 +253,9 @@ class Repository:
         order_by: Optional[Union[List[str], str]] = None,
         direction: Optional[str] = None,
         limit: int = None,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
-        stmt, pagination = self._build_query_paginate(
+        stmt, pagination = await self._build_query_paginate(
             session=session,
             stmt=stmt,
             model=model,
@@ -261,10 +270,12 @@ class Repository:
             limit=limit,
         )
 
-        return session.execute(stmt).scalars().unique().all(), pagination
+        result = await session.execute(stmt)
 
-    @with_session()
-    def _update_all(
+        return result.scalars().unique().all(), pagination
+
+    @with_async_session()
+    async def _update_all(
         self,
         model: Type[_T],
         values: Dict,
@@ -274,9 +285,9 @@ class Repository:
         ] = None,
         flush: bool = False,
         commit: bool = False,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        sequence = self._select_all(
+        sequence = await self._select_all(
             model=model,
             filters=filters,
             relationship_options=relationship_options,
@@ -287,16 +298,16 @@ class Repository:
                 setattr(item, key, value)
 
         if flush:
-            session.flush()
+            await session.flush()
         if commit:
-            session.commit()
+            await session.commit()
 
-        [session.refresh(item) for item in sequence]
+        [await session.refresh(item) for item in sequence]
 
         return sequence
 
-    @with_session()
-    def _update(
+    @with_async_session()
+    async def _update(
         self,
         model: Type[_T],
         values: Dict,
@@ -306,9 +317,9 @@ class Repository:
         ] = None,
         flush: bool = False,
         commit: bool = False,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> _T:
-        item = self._select(
+        item = await self._select(
             model=model,
             filters=filters,
             relationship_options=relationship_options,
@@ -319,62 +330,62 @@ class Repository:
             setattr(item, key, value)
 
         if flush:
-            session.flush()
+            await session.flush()
         if commit:
-            session.commit()
+            await session.commit()
 
-        session.refresh(item)
+        await session.refresh(item)
 
         return item
 
-    @with_session()
-    def _add_all(
+    @with_async_session()
+    async def _add_all(
         self,
         data: Iterable[_T],
         flush: bool = False,
         commit: bool = False,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> Iterable[_T]:
         session.add_all(data)
         if flush:
-            session.flush()
+            await session.flush()
         if commit:
-            session.commit()
+            await session.commit()
 
         if flush or commit:
-            [session.refresh(item) for item in data]
+            [await session.refresh(item) for item in data]
 
         return data
 
-    @with_session()
-    def _add(
+    @with_async_session()
+    async def _add(
         self,
         data: _T,
         flush: bool = False,
         commit: bool = False,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> _T:
         session.add(data)
         if flush:
-            session.flush()
+            await session.flush()
         if commit:
-            session.commit()
+            await session.commit()
 
         if flush or commit:
-            session.refresh(data)
+            await session.refresh(data)
 
         return data
 
-    @with_session()
-    def _delete(
+    @with_async_session()
+    async def _delete(
         self,
         model: Type[_T],
         filters: Optional[_FilterType] = None,
         flush: bool = True,
         commit: bool = False,
-        session: Optional[Session] = None,
+        session: Optional[AsyncSession] = None,
     ) -> bool:
-        rows = self._select_all(
+        rows = await self._select_all(
             model=model,
             filters=filters,
             session=session,
@@ -383,12 +394,14 @@ class Repository:
         if len(rows) == 0:
             return False
 
-        for row in rows:
-            session.delete(row)
+        tasks = [asyncio.create_task(session.delete(row)) for row in rows]
+
+        await asyncio.gather(*tasks)
 
         if flush:
-            session.flush()
+            await session.flush()
         if commit:
-            session.commit()
+            await session.commit()
 
         return True
+

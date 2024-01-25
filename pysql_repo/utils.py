@@ -17,6 +17,7 @@ from typing import (
 from sqlalchemy import (
     ColumnExpressionArgument,
     Select,
+    Update,
     and_,
     asc,
     desc,
@@ -38,17 +39,15 @@ from sqlalchemy.orm import (
     contains_eager,
 )
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.sql.dml import ReturningUpdate
 from sqlalchemy.sql.elements import Null, BinaryExpression
 
 # Enum
-from pysql_repo.enum import LoadingTechnique, Operators
+from pysql_repo.constants.enum import LoadingTechnique, Operators
 
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 
 _T = TypeVar("_T", bound=declarative_base())
-
-
-_Select = Union[Select[Tuple], Select[Tuple[_T]]]
 
 
 @dataclass
@@ -58,8 +57,8 @@ class RelationshipOption:
     children: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
 
 
-def build_query(
-    stmt: Select,
+def build_select_stmt(
+    stmt: Select[Tuple[_T]],
     model: Optional[Type[_T]] = None,
     filters: Optional[_FilterType] = None,
     optional_filters: Optional[_FilterType] = None,
@@ -70,7 +69,7 @@ def build_query(
     order_by: Optional[Union[List[str], str]] = None,
     direction: Optional[Union[List[str], str]] = None,
     limit: int = None,
-) -> _Select:
+) -> Select[Tuple[_T]]:
     stmt = apply_relationship_options(
         stmt=stmt,
         relationship_options=relationship_options,
@@ -104,25 +103,47 @@ def build_query(
     )
 
 
+def build_update_stmt(
+    stmt: Update,
+    model: Type[_T],
+    values: Dict,
+    filters: Optional[_FilterType] = None,
+    relationship_options: Optional[
+        Dict[InstrumentedAttribute, RelationshipOption]
+    ] = None,
+) -> ReturningUpdate[_T]:
+    stmt = apply_relationship_options(
+        stmt=stmt, relationship_options=relationship_options
+    )
+    return (
+        apply_filters(
+            stmt=stmt,
+            filter_dict=filters,
+        )
+        .values(**values)
+        .returning(model)
+    )
+
+
 def select_distinct(
     model: Type[_T],
     expr: ColumnExpressionArgument,
-) -> _Select:
+) -> Select[Tuple[_T]]:
     return select(distinct(expr)) if expr is not None else select(model)
 
 
 def apply_group_by(
-    stmt: _Select,
+    stmt: Select[Tuple[_T]],
     group_by: ColumnExpressionArgument,
-) -> _Select:
+) -> Select[Tuple[_T]]:
     return stmt.group_by(group_by) if group_by is not None else stmt
 
 
 def apply_relationship_options(
-    stmt: _Select,
+    stmt: Union[Select[Tuple[_T]], Update],
     relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
     parents: List[InstrumentedAttribute] = None,
-) -> _Select:
+) -> Union[Select[Tuple[_T]], Update]:
     def get_load(
         loading_technique: LoadingTechnique,
         items: List[InstrumentedAttribute],
@@ -188,10 +209,10 @@ def apply_relationship_options(
 
 
 def apply_filters(
-    stmt: _Select,
+    stmt: Union[Select[Tuple[_T]], Update],
     filter_dict: _FilterType,
     with_optional: bool = False,
-) -> _Select:
+) -> Union[Select[Tuple[_T]], Update]:
     filters = get_filters(
         filters=filter_dict,
         with_optional=with_optional,
@@ -201,11 +222,11 @@ def apply_filters(
 
 
 def apply_order_by(
-    stmt: _Select,
+    stmt: Select[Tuple[_T]],
     model: Type[_T],
     order_by: Union[List[str], str],
     direction: Union[List[str], str],
-) -> _Select:
+) -> Select[Tuple[_T]]:
     if order_by is None or direction is None:
         return stmt
 
@@ -230,10 +251,10 @@ def apply_order_by(
 
 def apply_pagination(
     session: Session,
-    stmt: _Select,
+    stmt: Select[Tuple[_T]],
     page: int,
     per_page: int,
-) -> Tuple[_Select, str]:
+) -> Tuple[Select[Tuple[_T]], str]:
     if page is None or per_page is None:
         return stmt, None
 
@@ -256,10 +277,10 @@ def apply_pagination(
 
 async def async_apply_pagination(
     session: AsyncSession,
-    stmt: _Select,
+    stmt: Select[Tuple[_T]],
     page: int,
     per_page: int,
-) -> Tuple[_Select, str]:
+) -> Tuple[Select[Tuple[_T]], str]:
     if page is None or per_page is None:
         return stmt, None
 
@@ -281,9 +302,9 @@ async def async_apply_pagination(
 
 
 def apply_limit(
-    stmt: _Select,
+    stmt: Select[Tuple[_T]],
     limit: int,
-) -> _Select:
+) -> Select[Tuple[_T]]:
     return stmt.limit(limit) if limit is not None else stmt
 
 
