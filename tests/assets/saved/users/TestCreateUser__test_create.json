@@ -1,0 +1,8 @@
+{
+    "id": 4,
+    "email": "zoo@demo.com",
+    "hashed_password": "zoo",
+    "full_name": "Zoo Boo",
+    "is_active": true,
+    "addresses": []
+}

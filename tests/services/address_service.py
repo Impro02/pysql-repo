@@ -12,7 +12,7 @@ from pysql_repo import Service, with_session
 from tests.repositories.address_repository import AddressRepository
 
 # MODELS
-from tests.models.schemas.adress import AddressRead
+from tests.models.schemas.address import AddressRead
 
 
 class AddressService(Service[AddressRepository]):

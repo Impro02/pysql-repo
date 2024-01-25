@@ -1,0 +1,19 @@
+{
+    "id": 2,
+    "email": "zoo@doo.com",
+    "hashed_password": "too",
+    "full_name": " boo bar",
+    "is_active": false,
+    "addresses": [
+        {
+            "id": 3,
+            "street": "Zoo Avenue",
+            "zip_code": 290,
+            "city": {
+                "id": 2,
+                "name": "Seatle",
+                "state": "WA"
+            }
+        }
+    ]
+}

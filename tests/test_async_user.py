@@ -2,14 +2,12 @@
 from pysql_repo.libs.file_lib import save_json_file
 
 # TESTS
-from tests.utils import (
-    SavedPath,
-    AsyncTestCustom,
-    async_load_expected_data,
-)
+from tests._async_base import IsolatedAsyncioTestCase, async_load_expected_data
+from tests.models.schemas.user import UserCreate
+from tests.utils import SavedPath
 
 
-class TestAsyncUsers(AsyncTestCustom):
+class TestUsers(IsolatedAsyncioTestCase):
     @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
     async def test_get_all(self, expected_data, saved_path):
         # WHEN
@@ -365,7 +363,7 @@ class TestAsyncUsers(AsyncTestCustom):
         )
 
 
-class TestUsersPaginate(AsyncTestCustom):
+class TestUsersPaginate(IsolatedAsyncioTestCase):
     @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
     async def test_with_zip_codes_not_in(self, expected_data, saved_path):
         # GIVEN
@@ -451,4 +449,129 @@ class TestUsersPaginate(AsyncTestCustom):
         self.assertEqual(
             expected_data,
             users_dict,
+        )
+
+
+class TestCreateUser(IsolatedAsyncioTestCase):
+    @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
+    async def test_create(self, expected_data, saved_path):
+        # GIVEN
+        payload = UserCreate(
+            email="zoo@demo.com",
+            hashed_password="zoo",
+            full_name="Zoo Boo",
+        )
+
+        # WHEN
+        users = await self._user_service.create_user(
+            data=payload,
+        )
+        user_dict = users.model_dump()
+
+        save_json_file(saved_path, user_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            user_dict,
+        )
+
+
+class TestCreateUsers(IsolatedAsyncioTestCase):
+    @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
+    async def test_create(self, expected_data, saved_path):
+        # GIVEN
+        payload = [
+            UserCreate(
+                email="zoo@demo.com",
+                hashed_password="zoo",
+                full_name="Zoo Boo",
+            ),
+            UserCreate(
+                email="too@demo.com",
+                hashed_password="uii",
+                full_name="Koo Moo",
+            ),
+        ]
+
+        # WHEN
+        users = await self._user_service.create_users(
+            data=payload,
+        )
+        users_dict = [user.model_dump() for user in users]
+
+        save_json_file(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestPathUser(IsolatedAsyncioTestCase):
+    @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
+    async def test_path_email(self, expected_data, saved_path):
+        # GIVEN
+        email = "zoo@doo.com"
+
+        # WHEN
+        user = await self._user_service.patch_email(id=2, email=email)
+        user_dict = user.model_dump()
+
+        save_json_file(saved_path, user_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            user_dict,
+        )
+
+
+class TestPathUsers(IsolatedAsyncioTestCase):
+    @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
+    async def test_path_disable(self, expected_data, saved_path):
+        # GIVEN
+        ids = [1, 3]
+
+        # WHEN
+        users = await self._user_service.patch_disable(ids=ids)
+        users_dict = [user.model_dump() for user in users]
+
+        save_json_file(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestDeleteUser(IsolatedAsyncioTestCase):
+    async def test_delete(self):
+        # GIVEN
+        id = 1
+
+        # WHEN
+        is_deleted = await self._user_service.delete_by_id(id=id)
+
+        # THEN
+        self.assertEqual(
+            True,
+            is_deleted,
+        )
+
+
+class TestDeleteUsers(IsolatedAsyncioTestCase):
+    async def test_delete_all(self):
+        # GIVEN
+        ids = [1, 3]
+
+        # WHEN
+        is_deleted = await self._user_service.delete_by_ids(ids=ids)
+
+        # THEN
+        self.assertEqual(
+            True,
+            is_deleted,
         )

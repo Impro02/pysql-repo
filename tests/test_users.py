@@ -1,11 +1,13 @@
 # LIBS
 from pysql_repo.libs.file_lib import save_json_file
+from tests.models.schemas.user import UserCreate
 
 # TESTS
-from tests.utils import SavedPath, TestCustom, load_expected_data
+from tests.utils import SavedPath
+from tests._base import TestCase, load_expected_data
 
 
-class TestUsers(TestCustom):
+class TestUsers(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
     def test_get_all(self, expected_data, saved_path):
         # WHEN
@@ -361,7 +363,7 @@ class TestUsers(TestCustom):
         )
 
 
-class TestUsersPaginate(TestCustom):
+class TestUsersPaginate(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
     def test_with_zip_codes_not_in(self, expected_data, saved_path):
         # GIVEN
@@ -447,4 +449,129 @@ class TestUsersPaginate(TestCustom):
         self.assertEqual(
             expected_data,
             users_dict,
+        )
+
+
+class TestCreateUser(TestCase):
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_create(self, expected_data, saved_path):
+        # GIVEN
+        payload = UserCreate(
+            email="zoo@demo.com",
+            hashed_password="zoo",
+            full_name="Zoo Boo",
+        )
+
+        # WHEN
+        users = self._user_service.create_user(
+            data=payload,
+        )
+        user_dict = users.model_dump()
+
+        save_json_file(saved_path, user_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            user_dict,
+        )
+
+
+class TestCreateUsers(TestCase):
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_create(self, expected_data, saved_path):
+        # GIVEN
+        payload = [
+            UserCreate(
+                email="zoo@demo.com",
+                hashed_password="zoo",
+                full_name="Zoo Boo",
+            ),
+            UserCreate(
+                email="too@demo.com",
+                hashed_password="uii",
+                full_name="Koo Moo",
+            ),
+        ]
+
+        # WHEN
+        users = self._user_service.create_users(
+            data=payload,
+        )
+        users_dict = [user.model_dump() for user in users]
+
+        save_json_file(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestPathUser(TestCase):
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_path_email(self, expected_data, saved_path):
+        # GIVEN
+        email = "zoo@doo.com"
+
+        # WHEN
+        user = self._user_service.patch_email(id=2, email=email)
+        user_dict = user.model_dump()
+
+        save_json_file(saved_path, user_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            user_dict,
+        )
+
+
+class TestPathUsers(TestCase):
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_path_disable(self, expected_data, saved_path):
+        # GIVEN
+        ids = [1, 3]
+
+        # WHEN
+        users = self._user_service.patch_disable(ids=ids)
+        users_dict = [user.model_dump() for user in users]
+
+        save_json_file(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestDeleteUser(TestCase):
+    def test_delete(self):
+        # GIVEN
+        id = 1
+
+        # WHEN
+        is_deleted = self._user_service.delete_by_id(id=id)
+
+        # THEN
+        self.assertEqual(
+            True,
+            is_deleted,
+        )
+
+
+class TestDeleteUsers(TestCase):
+    def test_delete_all(self):
+        # GIVEN
+        ids = [1, 3]
+
+        # WHEN
+        is_deleted = self._user_service.delete_by_ids(ids=ids)
+
+        # THEN
+        self.assertEqual(
+            True,
+            is_deleted,
         )

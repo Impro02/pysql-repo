@@ -1,0 +1,18 @@
+[
+    {
+        "id": 4,
+        "email": "zoo@demo.com",
+        "hashed_password": "zoo",
+        "full_name": "Zoo Boo",
+        "is_active": true,
+        "addresses": []
+    },
+    {
+        "id": 5,
+        "email": "too@demo.com",
+        "hashed_password": "uii",
+        "full_name": "Koo Moo",
+        "is_active": true,
+        "addresses": []
+    }
+]

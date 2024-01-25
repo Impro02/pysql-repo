@@ -3,7 +3,13 @@ from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 
 # MODELS
-from tests.models.schemas.adress import AddressRead
+from tests.models.schemas.address import AddressRead
+
+
+class UserCreate(BaseModel):
+    email: str
+    hashed_password: str
+    full_name: str
 
 
 class UserRead(BaseModel):

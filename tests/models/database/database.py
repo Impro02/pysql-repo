@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from typing import List
+from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -8,100 +9,104 @@ Base = declarative_base()
 class City(Base):
     __tablename__ = "CITY"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         "ID",
         Integer,
         primary_key=True,
         index=True,
     )
-    name = Column(
+    name: Mapped[str] = mapped_column(
         "NAME",
         String,
         index=True,
     )
-    state = Column(
+    state: Mapped[str] = mapped_column(
         "STATE",
         String,
         index=True,
     )
 
-    addresses = relationship(
+    addresses: Mapped[List["Address"]] = relationship(
         "Address",
         back_populates="city",
+        lazy="joined",
     )
 
 
 class Address(Base):
     __tablename__ = "ADDRESS"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         "ID",
         Integer,
         primary_key=True,
         index=True,
     )
-    street = Column(
+    street: Mapped[str] = mapped_column(
         "STREET",
         String,
         index=True,
     )
-    zip_code = Column(
+    zip_code: Mapped[str] = mapped_column(
         "ZIP_CODE",
         Integer,
         index=True,
     )
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         "USER_ID",
         Integer,
         ForeignKey("USER.ID"),
     )
-    city_id = Column(
+    city_id: Mapped[int] = mapped_column(
         "CITY_ID",
         Integer,
         ForeignKey("CITY.ID"),
     )
 
-    user = relationship(
+    user: Mapped["User"] = relationship(
         "User",
         back_populates="addresses",
+        lazy="joined",
     )
-    city = relationship(
+    city: Mapped["City"] = relationship(
         "City",
         back_populates="addresses",
+        lazy="joined",
     )
 
 
 class User(Base):
     __tablename__ = "USER"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         "ID",
         Integer,
         primary_key=True,
         index=True,
     )
-    email = Column(
+    email: Mapped[str] = mapped_column(
         "EMAIL",
         String,
         unique=True,
         index=True,
     )
-    hashed_password = Column(
+    hashed_password: Mapped[str] = mapped_column(
         "HASHED_PASSWORD",
         String,
     )
-    full_name = Column(
+    full_name: Mapped[str] = mapped_column(
         "FULL_NAME",
         String,
         index=True,
     )
-    is_active = Column(
+    is_active: Mapped[bool] = mapped_column(
         "IS_ACTIVE",
         Boolean,
         default=True,
     )
 
-    addresses = relationship(
+    addresses: Mapped[List["Address"]] = relationship(
         "Address",
         back_populates="user",
+        lazy="joined",
     )
