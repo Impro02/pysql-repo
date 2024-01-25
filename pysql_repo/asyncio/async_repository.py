@@ -394,9 +394,8 @@ class AsyncRepository:
         if len(rows) == 0:
             return False
 
-        tasks = [asyncio.create_task(session.delete(row)) for row in rows]
-
-        await asyncio.gather(*tasks)
+        for row in rows:
+            await session.delete(row)
 
         if flush:
             await session.flush()
@@ -404,4 +403,3 @@ class AsyncRepository:
             await session.commit()
 
         return True
-
