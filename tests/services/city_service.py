@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo import SessionService, with_session
+from pysql_repo import Service, with_session
 
 # REPOSITORIES
 from tests.repositories.city_repository import CityRepository
@@ -15,7 +15,7 @@ from tests.repositories.city_repository import CityRepository
 from tests.models.schemas.city import CityRead
 
 
-class CityService(SessionService[CityRepository]):
+class CityService(Service[CityRepository]):
     def __init__(
         self,
         city_repository: CityRepository,

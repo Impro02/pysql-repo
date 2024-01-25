@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # PYSQL_REPO
 from pysql_repo.decorators import with_async_session, with_session
-from pysql_repo.service import AsyncSessionService, SessionService
+from pysql_repo.service import AsyncService, Service
 
 # REPOSITORIES
 from tests.repositories.user_repository import AsyncUserRepository, UserRepository
@@ -17,7 +17,7 @@ from tests.repositories.user_repository import AsyncUserRepository, UserReposito
 from tests.models.schemas.user import UserRead
 
 
-class UserService(SessionService[UserRepository]):
+class UserService(Service[UserRepository]):
     def __init__(
         self,
         user_repository: UserRepository,
@@ -157,7 +157,7 @@ class UserService(SessionService[UserRepository]):
         return UserRead.model_validate(user)
 
 
-class AsyncUserService(AsyncSessionService[AsyncUserRepository]):
+class AsyncUserService(AsyncService[AsyncUserRepository]):
     def __init__(
         self,
         user_repository: AsyncUserRepository,

@@ -4,16 +4,16 @@ from logging import Logger
 
 # MODELS
 from pysql_repo.repository import (
-    SessionRepository,
-    AsyncSessionRepository,
+    Repository,
+    AsyncRepository,
 )
 
 
-_T = TypeVar("_T", bound=SessionRepository)
-_T_ASYNC = TypeVar("_T_ASYNC", bound=AsyncSessionRepository)
+_T = TypeVar("_T", bound=Repository)
+_T_ASYNC = TypeVar("_T_ASYNC", bound=AsyncRepository)
 
 
-class SessionService(Generic[_T]):
+class Service(Generic[_T]):
     def __init__(
         self,
         repository: _T,
@@ -26,7 +26,7 @@ class SessionService(Generic[_T]):
         return self._repository.session_manager()
 
 
-class AsyncSessionService(Generic[_T_ASYNC]):
+class AsyncService(Generic[_T_ASYNC]):
     def __init__(
         self,
         repository: _T_ASYNC,

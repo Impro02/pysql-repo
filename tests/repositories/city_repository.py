@@ -6,7 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo import Operators, SessionRepository
+from pysql_repo import Operators, Repository
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager
@@ -15,7 +15,7 @@ from contextlib import AbstractContextManager
 from tests.models.database.database import City
 
 
-class CityRepository(SessionRepository):
+class CityRepository(Repository):
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],

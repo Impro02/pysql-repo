@@ -1,10 +1,10 @@
 from pysql_repo.decorators import with_session
 from pysql_repo.repository import (
-    SessionRepository,
-    AsyncSessionRepository,
+    Repository,
+    AsyncRepository,
 )
 from pysql_repo.service import (
-    SessionService,
-    AsyncSessionService,
+    Service,
+    AsyncService,
 )
 from pysql_repo.enum import Operators, LoadingTechnique

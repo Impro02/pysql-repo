@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo import SessionService, with_session
+from pysql_repo import Service, with_session
 
 # REPOSITORIES
 from tests.repositories.address_repository import AddressRepository
@@ -15,7 +15,7 @@ from tests.repositories.address_repository import AddressRepository
 from tests.models.schemas.adress import AddressRead
 
 
-class AddressService(SessionService[AddressRepository]):
+class AddressService(Service[AddressRepository]):
     def __init__(
         self,
         address_repository: AddressRepository,

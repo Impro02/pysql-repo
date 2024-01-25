@@ -10,9 +10,9 @@ def with_session(
 ):
     def decorator(func):
         def wrapper(self, *args, **kwargs):
-            if not isinstance(self, (SessionRepository, SessionService)):
+            if not isinstance(self, (Repository, Service)):
                 raise TypeError(
-                    f"{self.__class__.__name__} must be instance of {SessionRepository.__name__} or {SessionService.__name__}"
+                    f"{self.__class__.__name__} must be instance of {Repository.__name__} or {Service.__name__}"
                 )
 
             session = kwargs.get(param_session)
@@ -38,9 +38,9 @@ def with_async_session(
 ):
     def decorator(func):
         async def wrapper(self, *args, **kwargs):
-            if not isinstance(self, (AsyncSessionRepository, AsyncSessionService)):
+            if not isinstance(self, (AsyncRepository, AsyncService)):
                 raise TypeError(
-                    f"{self.__class__.__name__} must be instance of {AsyncSessionRepository.__name__} or {AsyncSessionService.__name__}"
+                    f"{self.__class__.__name__} must be instance of {AsyncRepository.__name__} or {AsyncService.__name__}"
                 )
 
             session = kwargs.get(param_session)
@@ -62,10 +62,10 @@ def with_async_session(
 
 
 from pysql_repo.repository import (
-    SessionRepository,
-    AsyncSessionRepository,
+    Repository,
+    AsyncRepository,
 )
 from pysql_repo.service import (
-    SessionService,
-    AsyncSessionService,
+    Service,
+    AsyncService,
 )

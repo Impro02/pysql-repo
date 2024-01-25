@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # PYSQL_REPO
-from pysql_repo import Operators, SessionRepository, AsyncSessionRepository
+from pysql_repo import Operators, Repository, AsyncRepository
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager, AbstractAsyncContextManager
@@ -105,7 +105,7 @@ class _UserRepository:
         }
 
 
-class UserRepository(SessionRepository, _UserRepository):
+class UserRepository(Repository, _UserRepository):
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
@@ -252,7 +252,7 @@ class UserRepository(SessionRepository, _UserRepository):
         return user
 
 
-class AsyncUserRepository(AsyncSessionRepository, _UserRepository):
+class AsyncUserRepository(AsyncRepository, _UserRepository):
     def __init__(
         self,
         session_factory: Callable[..., AbstractAsyncContextManager[AsyncSession]],

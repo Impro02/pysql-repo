@@ -170,7 +170,7 @@ def load_expected_data(
 
             if not isinstance(self, TestCase):
                 raise TypeError(
-                    f"{self.__class__.__name__} must be instance of TestFastApi"
+                    f"{self.__class__.__name__} must be instance of {TestCase.__name__}"
                 )
 
             if saved_dir_path is None:
@@ -212,9 +212,9 @@ def async_load_expected_data(
             class_name = self.__class__.__name__
             function_name = func.__name__
 
-            if not isinstance(self, TestCase):
+            if not isinstance(self, IsolatedAsyncioTestCase):
                 raise TypeError(
-                    f"{self.__class__.__name__} must be instance of TestFastApi"
+                    f"{self.__class__.__name__} must be instance of {IsolatedAsyncioTestCase.__name__}"
                 )
 
             if saved_dir_path is None:

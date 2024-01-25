@@ -53,7 +53,7 @@ def after_cursor_execute(conn, cursor, statement, parameters, context, executema
 _T = TypeVar("_T", bound=declarative_base())
 
 
-class SessionRepository:
+class Repository:
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
@@ -409,7 +409,7 @@ class SessionRepository:
         return True
 
 
-class AsyncSessionRepository:
+class AsyncRepository:
     def __init__(
         self,
         session_factory: Callable[..., AbstractAsyncContextManager[AsyncSession]],
