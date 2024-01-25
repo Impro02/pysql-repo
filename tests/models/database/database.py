@@ -27,9 +27,7 @@ class City(Base):
     )
 
     addresses: Mapped[List["Address"]] = relationship(
-        "Address",
-        back_populates="city",
-        lazy="joined",
+        "Address", back_populates="city", lazy="joined", cascade="all, delete-orphan"
     )
 
 
@@ -109,4 +107,5 @@ class User(Base):
         "Address",
         back_populates="user",
         lazy="joined",
+        cascade="all, delete-orphan",
     )
