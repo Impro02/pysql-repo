@@ -13,13 +13,13 @@ pip install pysql_repo
 To access pysql-repo and its functions import it in your Python code like this:
 
 ```
-from pysql_repo import SessionRepository, SessionService, with_session, Operators, LoadingTechnique
+from pysql_repo import Repository, Service, with_session, Operators, LoadingTechnique
 from pysql_repo.utils import RelationshipOption
 ```
 
 ## Reading the example code
 
-To create a repository, you just have to inherit your class from SessionRepository.
+To create a repository, you just have to inherit your class from Repository.
 
 ```
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
@@ -131,7 +131,7 @@ class User(Base):
     )
 
 
-class UserRepository(SessionRepository):
+class UserRepository(Repository):
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
@@ -310,12 +310,12 @@ class UserRepository(SessionRepository):
 ```
 
 
-To create a service, you just have to inherit your class from SessionService.
+To create a service, you just have to inherit your class from Service.
 
 ```
 T = TypeVar("T", bound=UserReadSchema)
 
-class UserService(SessionService[UserRepository]):
+class UserService(Service[UserRepository]):
 
     def __init__(
             self,
