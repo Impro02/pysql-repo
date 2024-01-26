@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 
-def open_json_file(path: Path, encoding="utf-8"):
+def open_json_file(path: Path, encoding: str = "utf-8") -> Union[List[Dict], Dict]:
     if not path.exists():
         raise FileNotFoundError(f"Path {path} does not exist")
 
@@ -12,7 +12,21 @@ def open_json_file(path: Path, encoding="utf-8"):
         raise FileExistsError(f"Path {path} is not a file")
 
     with open(path, encoding=encoding) as json_file:
-        raw_data: Union[List[Dict], Dict] = json.load(json_file)
+        raw_data = json.load(json_file)
+
+    return raw_data
+
+
+def open_file(path: Path, encoding: str = "utf-8") -> bytes:
+    if not path.exists():
+        raise FileNotFoundError(f"Path {path} does not exist")
+
+    if not path.is_file():
+        raise FileExistsError(f"Path {path} is not a file")
+
+    with open(path, encoding=encoding) as file:
+        raw_data = file.read()
+        raw_data = raw_data.encode(encoding)
 
     return raw_data
 
