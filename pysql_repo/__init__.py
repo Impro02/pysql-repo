@@ -11,7 +11,7 @@ from pysql_repo.constants.enum import Operators, LoadingTechnique
 
 logging.basicConfig()
 _logger = logging.getLogger("pysql_repo")
-_logger.setLevel(logging.DEBUG)
+_logger.setLevel(logging.INFO)
 
 
 @event.listens_for(Engine, "before_cursor_execute")
