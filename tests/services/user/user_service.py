@@ -218,7 +218,7 @@ class UserService(Service[UserRepository]):
         self,
         id: int,
         session: Optional[Session] = None,
-    ) -> List[UserRead]:
+    ) -> bool:
         return self._repository.delete(
             id=id,
             flush=True,
@@ -230,7 +230,7 @@ class UserService(Service[UserRepository]):
         self,
         ids: List[int],
         session: Optional[Session] = None,
-    ) -> List[UserRead]:
+    ) -> bool:
         return self._repository.delete_all(
             ids=ids,
             flush=True,

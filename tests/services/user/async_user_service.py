@@ -218,7 +218,7 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
         self,
         id: int,
         session: Optional[AsyncSession] = None,
-    ) -> List[UserRead]:
+    ) -> bool:
         return await self._repository.delete(
             id=id,
             flush=True,
@@ -230,7 +230,7 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
         self,
         ids: List[int],
         session: Optional[AsyncSession] = None,
-    ) -> List[UserRead]:
+    ) -> bool:
         return await self._repository.delete_all(
             ids=ids,
             flush=True,

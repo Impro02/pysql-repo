@@ -173,13 +173,12 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
     ) -> User:
         user = await self._add(
             session=session,
-            data=User(
-                **{
-                    User.email.key: data.email,
-                    User.hashed_password.key: data.hashed_password,
-                    User.full_name.key: data.full_name,
-                }
-            ),
+            model=User,
+            values={
+                User.email.key: data.email,
+                User.hashed_password.key: data.hashed_password,
+                User.full_name.key: data.full_name,
+            },
             flush=flush,
             commit=commit,
         )
@@ -195,14 +194,13 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
     ) -> Iterable[User]:
         users = await self._add_all(
             session=session,
-            data=[
-                User(
-                    **{
-                        User.email.key: item.email,
-                        User.hashed_password.key: item.hashed_password,
-                        User.full_name.key: item.full_name,
-                    }
-                )
+            model=User,
+            values=[
+                {
+                    User.email.key: item.email,
+                    User.hashed_password.key: item.hashed_password,
+                    User.full_name.key: item.full_name,
+                }
                 for item in data
             ],
             flush=flush,
@@ -230,10 +228,6 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
                     Operators.EQUAL: id,
                 },
             },
-            relationship_options=self.get_relationship_options(
-                load_addresses=True,
-                load_city=True,
-            ),
             flush=flush,
             commit=commit,
         )
@@ -258,10 +252,6 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
                     Operators.IN: ids,
                 },
             },
-            relationship_options=self.get_relationship_options(
-                load_addresses=True,
-                load_city=True,
-            ),
             flush=flush,
             commit=commit,
         )
@@ -296,7 +286,7 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         commit: bool = True,
         session: Optional[AsyncSession] = None,
     ) -> bool:
-        is_deleted = await self._delete(
+        is_deleted = await self._delete_all(
             session=session,
             model=User,
             filters={

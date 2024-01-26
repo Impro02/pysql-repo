@@ -561,6 +561,19 @@ class TestDeleteUser(TestCase):
             is_deleted,
         )
 
+    def test_delete_not_found(self):
+        # GIVEN
+        id = -1
+
+        # WHEN
+        is_deleted = self._user_service.delete_by_id(id=id)
+
+        # THEN
+        self.assertEqual(
+            False,
+            is_deleted,
+        )
+
 
 class TestDeleteUsers(TestCase):
     def test_delete_all(self):
@@ -573,5 +586,18 @@ class TestDeleteUsers(TestCase):
         # THEN
         self.assertEqual(
             True,
+            is_deleted,
+        )
+
+    def test_delete_all_not_found(self):
+        # GIVEN
+        ids = [-1, -3]
+
+        # WHEN
+        is_deleted = self._user_service.delete_by_ids(ids=ids)
+
+        # THEN
+        self.assertEqual(
+            False,
             is_deleted,
         )
