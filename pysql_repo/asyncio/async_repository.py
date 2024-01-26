@@ -1,9 +1,7 @@
 # MODULES
-import asyncio
 from typing import (
     Callable,
     Dict,
-    Iterable,
     List,
     Optional,
     Tuple,
@@ -17,10 +15,10 @@ from typing import (
 from contextlib import AbstractAsyncContextManager
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, Row, Select, and_, update
+from sqlalchemy import ColumnExpressionArgument, Row, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import InstrumentedAttribute, joinedload
+from sqlalchemy.orm import InstrumentedAttribute
 
 # DECORATORS
 from pysql_repo.asyncio.async_decorator import with_async_session
@@ -29,16 +27,13 @@ from pysql_repo.asyncio.async_decorator import with_async_session
 from pysql_repo.utils import (
     _FilterType,
     RelationshipOption,
-    apply_filters,
     async_apply_pagination,
     build_delete_stmt,
     build_insert_stmt,
     build_select_stmt,
     build_update_stmt,
-    get_filters,
     select_distinct,
 )
-from tests.models.database.database import User
 
 
 _T = TypeVar("_T", bound=declarative_base())
@@ -101,7 +96,7 @@ class AsyncRepository:
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         session: Optional[AsyncSession] = None,
-    ) -> Optional[_T]:
+    ) -> Optional[Row[_T]]:
         stmt = select_distinct(
             model=model,
             expr=distinct,
@@ -345,7 +340,7 @@ class AsyncRepository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
-    ) -> Iterable[_T]:
+    ) -> Sequence[_T]:
         stmt = build_insert_stmt(
             model=model,
             values=values,

@@ -16,7 +16,7 @@ from typing import (
 from contextlib import AbstractContextManager
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, Row, Select, and_, insert, update
+from sqlalchemy import ColumnExpressionArgument, Select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, InstrumentedAttribute
 
@@ -31,7 +31,6 @@ from pysql_repo.utils import (
     build_insert_stmt,
     build_select_stmt,
     build_update_stmt,
-    get_filters,
     select_distinct,
     apply_pagination,
 )
