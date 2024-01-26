@@ -2,6 +2,7 @@ import logging
 import time
 
 from sqlalchemy import Engine, event
+from pysql_repo.database import DataBase
 from pysql_repo.decorators import with_session
 from pysql_repo.repository import Repository
 from pysql_repo.service import Service

@@ -6,8 +6,6 @@ from sqlalchemy import Column
 
 # PYSQL_REPO
 from pysql_repo import Operators
-
-# CONTEXTLIB
 from pysql_repo.constants.enum import LoadingTechnique
 from pysql_repo.utils import RelationshipOption
 

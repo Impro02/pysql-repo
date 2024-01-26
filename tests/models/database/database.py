@@ -1,4 +1,7 @@
+# MODULES
 from typing import List
+
+# SQLALCHEMY
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.ext.declarative import declarative_base
@@ -27,7 +30,10 @@ class City(Base):
     )
 
     addresses: Mapped[List["Address"]] = relationship(
-        "Address", back_populates="city", lazy="joined", cascade="all, delete-orphan"
+        "Address",
+        back_populates="city",
+        lazy="joined",
+        cascade="all, delete-orphan",
     )
 
 

@@ -6,8 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # PYSQL_REPO
-from pysql_repo.asyncio.async_decorator import with_async_session
-from pysql_repo.asyncio.async_service import AsyncService
+from pysql_repo.asyncio import AsyncService, with_async_session
 
 # REPOSITORIES
 from tests.repositories.user.async_user_repository import AsyncUserRepository
