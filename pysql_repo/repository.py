@@ -27,7 +27,10 @@ from pysql_repo.decorators import with_session
 from pysql_repo.utils import (
     _FilterType,
     RelationshipOption,
+    build_delete_stmt,
+    build_insert_stmt,
     build_select_stmt,
+    build_update_stmt,
     get_filters,
     select_distinct,
     apply_pagination,
@@ -190,7 +193,7 @@ class Repository:
             limit=limit,
         )
 
-        return session.execute(stmt).scalars().unique().all()
+        return session.execute(stmt).unique().scalars().all()
 
     @with_session()
     def _select_paginate(
@@ -261,7 +264,7 @@ class Repository:
             limit=limit,
         )
 
-        return session.execute(stmt).scalars().unique().all(), pagination
+        return session.execute(stmt).unique().scalars().all(), pagination
 
     @with_session()
     def _update_all(
@@ -269,22 +272,17 @@ class Repository:
         model: Type[_T],
         values: Dict,
         filters: Optional[_FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute, RelationshipOption]
-        ] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
-        sequence = self._select_all(
+        stmt = build_update_stmt(
             model=model,
+            values=values,
             filters=filters,
-            relationship_options=relationship_options,
-            session=session,
         )
-        for item in sequence:
-            for key, value in values.items():
-                setattr(item, key, value)
+
+        sequence = session.execute(stmt).unique().scalars().all()
 
         if flush:
             session.flush()
@@ -301,22 +299,20 @@ class Repository:
         model: Type[_T],
         values: Dict,
         filters: Optional[_FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute, RelationshipOption]
-        ] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> _T:
-        item = self._select(
+        stmt = build_update_stmt(
             model=model,
+            values=values,
             filters=filters,
-            relationship_options=relationship_options,
-            session=session,
         )
 
-        for key, value in values.items():
-            setattr(item, key, value)
+        item = session.execute(stmt).unique().scalar_one_or_none()
+
+        if item is None:
+            return None
 
         if flush:
             session.flush()
@@ -330,40 +326,80 @@ class Repository:
     @with_session()
     def _add_all(
         self,
-        data: Iterable[_T],
+        model: Type[_T],
+        values: List[Dict],
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Iterable[_T]:
-        session.add_all(data)
+        stmt = build_insert_stmt(
+            model=model,
+            values=values,
+        )
+
+        sequence = session.execute(stmt).unique().scalars().all()
+
         if flush:
             session.flush()
         if commit:
             session.commit()
 
         if flush or commit:
-            [session.refresh(item) for item in data]
+            [session.refresh(item) for item in sequence]
 
-        return data
+        return sequence
 
     @with_session()
     def _add(
         self,
-        data: _T,
+        model: Type[_T],
+        values: Dict,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> _T:
-        session.add(data)
+        stmt = build_insert_stmt(
+            model=model,
+            values=values,
+        )
+
+        item = session.execute(stmt).unique().scalar_one()
+
         if flush:
             session.flush()
         if commit:
             session.commit()
 
         if flush or commit:
-            session.refresh(data)
+            session.refresh(item)
 
-        return data
+        return item
+
+    @with_session()
+    def _delete_all(
+        self,
+        model: Type[_T],
+        filters: Optional[_FilterType] = None,
+        flush: bool = True,
+        commit: bool = False,
+        session: Optional[Session] = None,
+    ) -> bool:
+        stmt = build_delete_stmt(
+            model=model,
+            filters=filters,
+        )
+
+        sequence = session.execute(stmt).unique().scalars().all()
+
+        if len(sequence) == 0:
+            return False
+
+        if flush:
+            session.flush()
+        if commit:
+            session.commit()
+
+        return True
 
     @with_session()
     def _delete(
@@ -374,17 +410,15 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> bool:
-        rows = self._select_all(
+        stmt = build_delete_stmt(
             model=model,
             filters=filters,
-            session=session,
         )
 
-        if len(rows) == 0:
-            return False
+        item = session.execute(stmt).unique().scalar_one_or_none()
 
-        for row in rows:
-            session.delete(row)
+        if item is None:
+            return False
 
         if flush:
             session.flush()

@@ -31,6 +31,8 @@ from pysql_repo.utils import (
     RelationshipOption,
     apply_filters,
     async_apply_pagination,
+    build_delete_stmt,
+    build_insert_stmt,
     build_select_stmt,
     build_update_stmt,
     get_filters,
@@ -199,7 +201,7 @@ class AsyncRepository:
 
         result = await session.execute(stmt)
 
-        return result.scalars().unique().all()
+        return result.unique().scalars().all()
 
     @with_async_session()
     async def _select_paginate(
@@ -272,7 +274,7 @@ class AsyncRepository:
 
         result = await session.execute(stmt)
 
-        return result.scalars().unique().all(), pagination
+        return result.unique().scalars().all(), pagination
 
     @with_async_session()
     async def _update_all(
@@ -280,22 +282,19 @@ class AsyncRepository:
         model: Type[_T],
         values: Dict,
         filters: Optional[_FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute, RelationshipOption]
-        ] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        sequence = await self._select_all(
+        stmt = build_update_stmt(
             model=model,
+            values=values,
             filters=filters,
-            relationship_options=relationship_options,
-            session=session,
         )
-        for item in sequence:
-            for key, value in values.items():
-                setattr(item, key, value)
+
+        result = await session.execute(stmt)
+
+        sequence = result.unique().scalars().all()
 
         if flush:
             await session.flush()
@@ -312,22 +311,22 @@ class AsyncRepository:
         model: Type[_T],
         values: Dict,
         filters: Optional[_FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute, RelationshipOption]
-        ] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
-    ) -> _T:
-        item = await self._select(
+    ) -> Optional[_T]:
+        stmt = build_update_stmt(
             model=model,
+            values=values,
             filters=filters,
-            relationship_options=relationship_options,
-            session=session,
         )
 
-        for key, value in values.items():
-            setattr(item, key, value)
+        result = await session.execute(stmt)
+
+        item = result.unique().scalar_one_or_none()
+
+        if item is None:
+            return None
 
         if flush:
             await session.flush()
@@ -341,40 +340,86 @@ class AsyncRepository:
     @with_async_session()
     async def _add_all(
         self,
-        data: Iterable[_T],
+        model: Type[_T],
+        values: List[Dict],
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Iterable[_T]:
-        session.add_all(data)
+        stmt = build_insert_stmt(
+            model=model,
+            values=values,
+        )
+
+        result = await session.execute(stmt)
+
+        sequence = result.unique().scalars().all()
+
         if flush:
             await session.flush()
         if commit:
             await session.commit()
 
         if flush or commit:
-            [await session.refresh(item) for item in data]
+            [await session.refresh(item) for item in sequence]
 
-        return data
+        return sequence
 
     @with_async_session()
     async def _add(
         self,
-        data: _T,
+        model: Type[_T],
+        values: Dict,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> _T:
-        session.add(data)
+        stmt = build_insert_stmt(
+            model=model,
+            values=values,
+        )
+
+        result = await session.execute(stmt)
+
+        item = result.unique().scalar_one()
+
         if flush:
             await session.flush()
         if commit:
             await session.commit()
 
         if flush or commit:
-            await session.refresh(data)
+            await session.refresh(item)
 
-        return data
+        return item
+
+    @with_async_session()
+    async def _delete_all(
+        self,
+        model: Type[_T],
+        filters: Optional[_FilterType] = None,
+        flush: bool = True,
+        commit: bool = False,
+        session: Optional[AsyncSession] = None,
+    ) -> bool:
+        stmt = build_delete_stmt(
+            model=model,
+            filters=filters,
+        )
+
+        result = await session.execute(stmt)
+
+        sequence = result.unique().scalars().all()
+
+        if len(sequence) == 0:
+            return False
+
+        if flush:
+            session.flush()
+        if commit:
+            session.commit()
+
+        return True
 
     @with_async_session()
     async def _delete(
@@ -385,17 +430,17 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> bool:
-        rows = await self._select_all(
+        stmt = build_delete_stmt(
             model=model,
             filters=filters,
-            session=session,
         )
 
-        if len(rows) == 0:
-            return False
+        result = await session.execute(stmt)
 
-        for row in rows:
-            await session.delete(row)
+        item = result.unique().scalar_one_or_none()
+
+        if item is None:
+            return False
 
         if flush:
             await session.flush()

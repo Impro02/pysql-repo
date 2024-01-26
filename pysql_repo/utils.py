@@ -1,4 +1,5 @@
 # MODULES
+from ast import Delete
 from dataclasses import dataclass, field
 import json
 from typing import (
@@ -20,11 +21,14 @@ from sqlalchemy import (
     Update,
     and_,
     asc,
+    delete,
     desc,
+    insert,
     select,
     distinct,
     tuple_,
     func,
+    update,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
@@ -39,7 +43,7 @@ from sqlalchemy.orm import (
     contains_eager,
 )
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy.sql.dml import ReturningUpdate
+from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
 from sqlalchemy.sql.elements import Null, BinaryExpression
 
 # Enum
@@ -104,25 +108,35 @@ def build_select_stmt(
 
 
 def build_update_stmt(
-    stmt: Update,
     model: Type[_T],
     values: Dict,
     filters: Optional[_FilterType] = None,
-    relationship_options: Optional[
-        Dict[InstrumentedAttribute, RelationshipOption]
-    ] = None,
-) -> ReturningUpdate[_T]:
-    stmt = apply_relationship_options(
-        stmt=stmt, relationship_options=relationship_options
-    )
+) -> ReturningUpdate[Tuple[_T]]:
     return (
         apply_filters(
-            stmt=stmt,
+            stmt=update(model),
             filter_dict=filters,
         )
-        .values(**values)
+        .values(values)
         .returning(model)
     )
+
+
+def build_insert_stmt(
+    model: Type[_T],
+    values: Union[List[Dict], Dict],
+) -> ReturningInsert[Tuple[_T]]:
+    return insert(model).values(values).returning(model)
+
+
+def build_delete_stmt(
+    model: Type[_T],
+    filters: _FilterType,
+) -> ReturningDelete[Tuple[_T]]:
+    return apply_filters(
+        stmt=delete(model),
+        filter_dict=filters,
+    ).returning(model)
 
 
 def select_distinct(
@@ -212,7 +226,7 @@ def apply_filters(
     stmt: Union[Select[Tuple[_T]], Update],
     filter_dict: _FilterType,
     with_optional: bool = False,
-) -> Union[Select[Tuple[_T]], Update]:
+) -> Union[Select[Tuple[_T]], Update, Delete]:
     filters = get_filters(
         filters=filter_dict,
         with_optional=with_optional,
