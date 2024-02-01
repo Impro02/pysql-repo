@@ -1,5 +1,5 @@
 # MODULES
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 # SQLALCHEMY
 from sqlalchemy.orm import Session
@@ -189,7 +189,7 @@ class UserRepository(Repository, _UserRepositoryBase):
         flush: bool = False,
         commit: bool = True,
         session: Optional[Session] = None,
-    ) -> Iterable[User]:
+    ) -> Sequence[User]:
         users = self._add_all(
             session=session,
             model=User,

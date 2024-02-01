@@ -281,6 +281,9 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
+        if values is None or len(values) == 0:
+            return []
+
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -310,6 +313,9 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
+        if values is None or len(values) == 0:
+            return None
+
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -341,6 +347,9 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
+        if values is None or len(values) == 0:
+            return []
+
         stmt = build_insert_stmt(
             model=model,
             values=values,
@@ -368,7 +377,10 @@ class AsyncRepository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
-    ) -> _T:
+    ) -> Optional[_T]:
+        if values is None or len(values) == 0:
+            return None
+
         stmt = build_insert_stmt(
             model=model,
             values=values,

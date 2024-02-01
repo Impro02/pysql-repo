@@ -2,7 +2,6 @@
 from typing import (
     Callable,
     Dict,
-    Iterable,
     List,
     Optional,
     Tuple,
@@ -275,6 +274,9 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
+        if values is None or len(values) == 0:
+            return []
+
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -301,7 +303,10 @@ class Repository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> _T:
+    ) -> Optional[_T]:
+        if values is None or len(values) == 0:
+            return None
+
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -330,7 +335,10 @@ class Repository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> Iterable[_T]:
+    ) -> Sequence[_T]:
+        if values is None or len(values) == 0:
+            return []
+
         stmt = build_insert_stmt(
             model=model,
             values=values,
@@ -356,7 +364,10 @@ class Repository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> _T:
+    ) -> Optional[_T]:
+        if values is None or len(values) == 0:
+            return None
+
         stmt = build_insert_stmt(
             model=model,
             values=values,

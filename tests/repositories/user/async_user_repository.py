@@ -1,5 +1,5 @@
 # MODULES
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 # SQLALCHEMY
 from sqlalchemy import Sequence
@@ -191,7 +191,7 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         flush: bool = False,
         commit: bool = True,
         session: Optional[AsyncSession] = None,
-    ) -> Iterable[User]:
+    ) -> Sequence[User]:
         users = await self._add_all(
             session=session,
             model=User,

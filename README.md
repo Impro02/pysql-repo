@@ -170,7 +170,7 @@ To create a repository, you just have to inherit your class from Repository.
 
 ```
 # MODULES
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 # SQLALCHEMY
 from sqlalchemy.orm import Column, Session
@@ -449,7 +449,7 @@ class UserRepository(Repository, _UserRepositoryBase):
         flush: bool = False,
         commit: bool = True,
         session: Optional[Session] = None,
-    ) -> Iterable[User]:
+    ) -> Sequence[User]:
         users = self._add_all(
             session=session,
             model=User,
@@ -827,7 +827,7 @@ To create an  async repository, you just have to inherit your class from AsyncRe
 
 ```
 # MODULES
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 # SQLALCHEMY
 from sqlalchemy import Sequence
@@ -1019,7 +1019,7 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         flush: bool = False,
         commit: bool = True,
         session: Optional[AsyncSession] = None,
-    ) -> Iterable[User]:
+    ) -> Sequence[User]:
         users = await self._add_all(
             session=session,
             model=User,
