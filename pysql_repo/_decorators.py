@@ -17,6 +17,7 @@ def check_values(as_list: bool = False):
                 if (
                     values_attr is None
                     or not isinstance(values_attr, list)
+                    or len(values_attr) == 0
                     or not all(
                         isinstance(item, dict) and isinstance(key, str)
                         for item in values_attr
@@ -30,6 +31,7 @@ def check_values(as_list: bool = False):
                 if (
                     values_attr is None
                     or not isinstance(values_attr, dict)
+                    or len(values_attr) == 0
                     or not all(isinstance(key, str) for key in values_attr.keys())
                 ):
                     raise TypeError(
