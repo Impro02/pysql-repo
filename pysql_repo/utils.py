@@ -124,9 +124,8 @@ def build_update_stmt(
 
 def build_insert_stmt(
     model: Type[_T],
-    values: Union[List[Dict], Dict],
 ) -> ReturningInsert[Tuple[_T]]:
-    return insert(model).values(values).returning(model)
+    return insert(model).returning(model)
 
 
 def build_delete_stmt(
@@ -404,9 +403,11 @@ def get_conditions_from_dict(
                             conditions.append(
                                 tuple_([func.lower(key_) for key_ in key]).in_(
                                     [
-                                        func.lower(v_)
-                                        if not isinstance(v_, Null)
-                                        else v_
+                                        (
+                                            func.lower(v_)
+                                            if not isinstance(v_, Null)
+                                            else v_
+                                        )
                                         for v_ in v
                                     ]
                                 )
@@ -415,9 +416,11 @@ def get_conditions_from_dict(
                             conditions.append(
                                 func.lower(key).in_(
                                     [
-                                        func.lower(v_)
-                                        if not isinstance(v_, Null)
-                                        else v_
+                                        (
+                                            func.lower(v_)
+                                            if not isinstance(v_, Null)
+                                            else v_
+                                        )
                                         for v_ in v
                                     ]
                                 )
@@ -435,9 +438,11 @@ def get_conditions_from_dict(
                             conditions.append(
                                 tuple_([func.lower(key_) for key_ in key]).notin_(
                                     [
-                                        func.lower(v_)
-                                        if not isinstance(v_, Null)
-                                        else v_
+                                        (
+                                            func.lower(v_)
+                                            if not isinstance(v_, Null)
+                                            else v_
+                                        )
                                         for v_ in v
                                     ]
                                 )
@@ -446,9 +451,11 @@ def get_conditions_from_dict(
                             conditions.append(
                                 func.lower(key).notin_(
                                     [
-                                        func.lower(v_)
-                                        if not isinstance(v_, Null)
-                                        else v_
+                                        (
+                                            func.lower(v_)
+                                            if not isinstance(v_, Null)
+                                            else v_
+                                        )
                                         for v_ in v
                                     ]
                                 )

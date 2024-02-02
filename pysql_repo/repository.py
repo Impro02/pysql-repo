@@ -339,12 +339,9 @@ class Repository:
         if values is None or len(values) == 0:
             return []
 
-        stmt = build_insert_stmt(
-            model=model,
-            values=values,
-        )
+        stmt = build_insert_stmt(model=model)
 
-        sequence = session.execute(stmt).unique().scalars().all()
+        sequence = session.execute(stmt, values).unique().scalars().all()
 
         if flush:
             session.flush()
@@ -368,12 +365,9 @@ class Repository:
         if values is None or len(values) == 0:
             return None
 
-        stmt = build_insert_stmt(
-            model=model,
-            values=values,
-        )
+        stmt = build_insert_stmt(model=model)
 
-        item = session.execute(stmt).unique().scalar_one()
+        item = session.execute(stmt, values).unique().scalar_one()
 
         if flush:
             session.flush()

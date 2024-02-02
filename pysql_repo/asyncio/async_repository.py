@@ -350,12 +350,9 @@ class AsyncRepository:
         if values is None or len(values) == 0:
             return []
 
-        stmt = build_insert_stmt(
-            model=model,
-            values=values,
-        )
+        stmt = build_insert_stmt(model=model)
 
-        result = await session.execute(stmt)
+        result = await session.execute(stmt, values)
 
         sequence = result.unique().scalars().all()
 
@@ -381,12 +378,9 @@ class AsyncRepository:
         if values is None or len(values) == 0:
             return None
 
-        stmt = build_insert_stmt(
-            model=model,
-            values=values,
-        )
+        stmt = build_insert_stmt(model=model)
 
-        result = await session.execute(stmt)
+        result = await session.execute(stmt, values)
 
         item = result.unique().scalar_one()
 
