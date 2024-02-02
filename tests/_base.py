@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest import TestCase as _TestCase
 
 # DATABASE
-from pysql_repo.database import DataBase
+from pysql_repo._database import DataBase
 
 # TESTS
 from tests.models.database.database import Address, Base, City, User

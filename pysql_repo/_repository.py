@@ -1,5 +1,6 @@
 # MODULES
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -20,10 +21,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, InstrumentedAttribute
 
 # DECORATORS
-from pysql_repo.decorators import with_session
+from pysql_repo._decorators import check_values as _check_values, with_session
 
 # UTILS
-from pysql_repo.utils import (
+from pysql_repo._utils import (
     _FilterType,
     RelationshipOption,
     build_delete_stmt,
@@ -264,18 +265,24 @@ class Repository:
 
         return session.execute(stmt).unique().scalars().all(), pagination
 
+    @_check_values(as_list=False)
     @with_session()
     def _update_all(
         self,
         model: Type[_T],
-        values: Dict,
+        values: Dict[str, Any],
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
-        if values is None or len(values) == 0:
-            return []
+        if (
+            values is None
+            or not isinstance(values, dict)
+            or len(values) == 0
+            or any([not isinstance(item, str) for item in values.keys()])
+        ):
+            raise TypeError("values expected to be Dict[str, Any]")
 
         stmt = build_update_stmt(
             model=model,
@@ -294,19 +301,17 @@ class Repository:
 
         return sequence
 
+    @_check_values(as_list=False)
     @with_session()
     def _update(
         self,
         model: Type[_T],
-        values: Dict,
+        values: Dict[str, Any],
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Optional[_T]:
-        if values is None or len(values) == 0:
-            return None
-
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -327,18 +332,16 @@ class Repository:
 
         return item
 
+    @_check_values(as_list=True)
     @with_session()
     def _add_all(
         self,
         model: Type[_T],
-        values: List[Dict],
+        values: List[Dict[str, Any]],
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
-        if values is None or len(values) == 0:
-            return []
-
         stmt = build_insert_stmt(model=model)
 
         sequence = session.execute(stmt, values).unique().scalars().all()
@@ -353,18 +356,16 @@ class Repository:
 
         return sequence
 
+    @_check_values(as_list=False)
     @with_session()
     def _add(
         self,
         model: Type[_T],
-        values: Dict,
+        values: Dict[str, Any],
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Optional[_T]:
-        if values is None or len(values) == 0:
-            return None
-
         stmt = build_insert_stmt(model=model)
 
         item = session.execute(stmt, values).unique().scalar_one()

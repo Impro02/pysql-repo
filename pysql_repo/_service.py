@@ -3,7 +3,7 @@ from typing import TypeVar, Generic
 from logging import Logger
 
 # MODELS
-from pysql_repo.repository import Repository
+from pysql_repo._repository import Repository
 
 
 _T = TypeVar("_T", bound=Repository)

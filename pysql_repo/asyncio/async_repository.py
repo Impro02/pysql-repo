@@ -1,5 +1,6 @@
 # MODULES
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -21,10 +22,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import InstrumentedAttribute
 
 # DECORATORS
+from pysql_repo._decorators import check_values as _check_values
 from pysql_repo.asyncio.async_decorator import with_async_session
 
 # UTILS
-from pysql_repo.utils import (
+from pysql_repo._utils import (
     _FilterType,
     RelationshipOption,
     async_apply_pagination,
@@ -271,19 +273,17 @@ class AsyncRepository:
 
         return result.unique().scalars().all(), pagination
 
+    @_check_values(as_list=False)
     @with_async_session()
     async def _update_all(
         self,
         model: Type[_T],
-        values: Dict,
+        values: Dict[str, Any],
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        if values is None or len(values) == 0:
-            return []
-
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -303,19 +303,17 @@ class AsyncRepository:
 
         return sequence
 
+    @_check_values(as_list=False)
     @with_async_session()
     async def _update(
         self,
         model: Type[_T],
-        values: Dict,
+        values: Dict[str, Any],
         filters: Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
-        if values is None or len(values) == 0:
-            return None
-
         stmt = build_update_stmt(
             model=model,
             values=values,
@@ -338,18 +336,16 @@ class AsyncRepository:
 
         return item
 
+    @_check_values(as_list=True)
     @with_async_session()
     async def _add_all(
         self,
         model: Type[_T],
-        values: List[Dict],
+        values: List[Dict[str, Any]],
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        if values is None or len(values) == 0:
-            return []
-
         stmt = build_insert_stmt(model=model)
 
         result = await session.execute(stmt, values)
@@ -366,18 +362,16 @@ class AsyncRepository:
 
         return sequence
 
+    @_check_values(as_list=False)
     @with_async_session()
     async def _add(
         self,
         model: Type[_T],
-        values: Dict,
+        values: Dict[str, Any],
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
-        if values is None or len(values) == 0:
-            return None
-
         stmt = build_insert_stmt(model=model)
 
         result = await session.execute(stmt, values)
@@ -416,9 +410,9 @@ class AsyncRepository:
             return False
 
         if flush:
-            session.flush()
+            await session.flush()
         if commit:
-            session.commit()
+            await session.commit()
 
         return True
 

@@ -5,9 +5,7 @@ from typing import Any, Dict, List, Optional
 from sqlalchemy import Column
 
 # PYSQL_REPO
-from pysql_repo import Operators
-from pysql_repo.constants.enum import LoadingTechnique
-from pysql_repo.utils import RelationshipOption
+from pysql_repo import Operators, LoadingTechnique, RelationshipOption
 
 # MODELS
 from tests.models.database.database import Address, User
@@ -83,17 +81,21 @@ class UserRepositoryBase:
 
         return {
             User.addresses: RelationshipOption(
-                lazy=LoadingTechnique.JOINED
-                if load_addresses
-                else LoadingTechnique.NOLOAD,
-                added_criteria=extra_join_addresses
-                if len(extra_join_addresses) > 0
-                else None,
+                lazy=(
+                    LoadingTechnique.JOINED
+                    if load_addresses
+                    else LoadingTechnique.NOLOAD
+                ),
+                added_criteria=(
+                    extra_join_addresses if len(extra_join_addresses) > 0 else None
+                ),
                 children={
                     Address.city: RelationshipOption(
-                        lazy=LoadingTechnique.JOINED
-                        if load_city
-                        else LoadingTechnique.NOLOAD,
+                        lazy=(
+                            LoadingTechnique.JOINED
+                            if load_city
+                            else LoadingTechnique.NOLOAD
+                        ),
                     )
                 },
             ),

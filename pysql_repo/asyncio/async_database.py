@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import (
 from contextlib import asynccontextmanager
 
 # UTILS
-from pysql_repo._database import (
+from pysql_repo._database_base import (
     Database as _Database,
     DataBaseConfigTypedDict as _DataBaseConfigTypedDict,
 )

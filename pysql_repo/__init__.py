@@ -2,11 +2,12 @@ import logging
 import time
 
 from sqlalchemy import Engine, event
-from pysql_repo.database import DataBase
-from pysql_repo.decorators import with_session
-from pysql_repo.repository import Repository
-from pysql_repo.service import Service
-from pysql_repo.constants.enum import Operators, LoadingTechnique
+from pysql_repo._database import DataBase
+from pysql_repo._decorators import with_session
+from pysql_repo._repository import Repository
+from pysql_repo._service import Service
+from pysql_repo._utils import RelationshipOption
+from pysql_repo._constants.enum import Operators, LoadingTechnique
 
 
 logging.basicConfig()

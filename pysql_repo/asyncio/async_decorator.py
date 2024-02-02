@@ -2,7 +2,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # _CONSTANTS
-from pysql_repo.constants.constants import _PARAM_SESSION
+from pysql_repo._constants.constants import _PARAM_SESSION
 
 
 def with_async_session(

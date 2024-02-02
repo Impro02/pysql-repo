@@ -47,7 +47,7 @@ from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
 from sqlalchemy.sql.elements import Null, BinaryExpression
 
 # Enum
-from pysql_repo.constants.enum import LoadingTechnique, Operators
+from pysql_repo._constants.enum import LoadingTechnique, Operators
 
 _FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
 

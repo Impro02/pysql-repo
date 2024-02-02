@@ -6,8 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo.decorators import with_session
-from pysql_repo.service import Service
+from pysql_repo import Service, with_session
 
 # REPOSITORIES
 from tests.repositories.user.user_repository import UserRepository
