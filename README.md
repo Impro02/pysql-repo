@@ -13,8 +13,7 @@ pip install pysql_repo
 To access pysql-repo and its functions import it in your Python code like this:
 
 ```
-from pysql_repo import Database, Repository, Service, with_session, Operators, LoadingTechnique
-from pysql_repo.utils import RelationshipOption
+from pysql_repo import Database, Repository, Service, with_session, Operators, LoadingTechnique, RelationshipOption
 ```
 
 To access pysql-repo and its asyncio functions import it in your Python code like this:
@@ -176,9 +175,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 from sqlalchemy.orm import Column, Session
 
 # PYSQL_REPO
-from pysql_repo import Operators, Repository
-from pysql_repo.constants.enum import LoadingTechnique
-from pysql_repo.utils import RelationshipOption
+from pysql_repo import Operators, Repository, LoadingTechnique, RelationshipOption
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager
@@ -570,8 +567,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo.decorators import with_session
-from pysql_repo.service import Service
+from pysql_repo import Service, with_session
 
 # REPOSITORIES
 from tests.repositories.user.user_repository import UserRepository
