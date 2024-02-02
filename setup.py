@@ -10,8 +10,8 @@ setup(
     version=version,
     packages=[
         "pysql_repo",
+        "pysql_repo._constants",
         "pysql_repo.asyncio",
-        "pysql_repo.constants",
         "pysql_repo.libs",
     ],
     install_requires=required_packages,
