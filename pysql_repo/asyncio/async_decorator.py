@@ -2,12 +2,28 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # _CONSTANTS
-from pysql_repo._constants.constants import _PARAM_SESSION
+from pysql_repo._constants.constants import PARAM_SESSION as _PARAM_SESSION
 
 
 def with_async_session(
     param_session: str = _PARAM_SESSION,
 ):
+    """
+    Decorator that provides an async session to the decorated method.
+    If the session is not provided as a keyword argument, it creates a new session using the session manager.
+    The session is then passed as a keyword argument to the decorated method.
+
+    Args:
+        param_session (str, optional): The name of the session parameter. Defaults to _PARAM_SESSION.
+
+    Raises:
+        TypeError: If the decorated object is not an instance of AsyncRepository or AsyncService.
+        TypeError: If the session is not an instance of AsyncSession.
+
+    Returns:
+        Callable: The decorated method.
+    """
+
     def decorator(func):
         async def wrapper(self, *args, **kwargs):
             if not isinstance(self, (AsyncRepository, AsyncService)):

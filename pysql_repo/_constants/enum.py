@@ -3,6 +3,10 @@ import enum
 
 
 class Operators(enum.Enum):
+    """
+    Enum class representing various operators used in SQL queries.
+    """
+
     LIKE = "LIKE"
     NOT_LIKE = "NOT_LIKE"
     ILIKE = "ILIKE"
@@ -26,6 +30,10 @@ class Operators(enum.Enum):
 
 
 class LoadingTechnique(enum.Enum):
+    """
+    Enum class representing different loading techniques.
+    """
+
     CONTAINS_EAGER = "contains_eager"
     LAZY = "select"
     JOINED = "joined"

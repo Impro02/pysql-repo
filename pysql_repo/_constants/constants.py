@@ -1,1 +1,1 @@
-_PARAM_SESSION = "session"
+PARAM_SESSION = "session"

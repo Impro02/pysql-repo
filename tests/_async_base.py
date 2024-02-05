@@ -31,7 +31,6 @@ class IsolatedAsyncioTestCase(_IsolatedAsyncioTestCase):
                 "databases",
                 "ini",
             ),
-            "create_on_start": True,
         },
         base=Base,
         logger=LOGGER_DB,

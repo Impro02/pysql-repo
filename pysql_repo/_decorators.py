@@ -3,10 +3,26 @@ from typing import Any, Dict, List, Union
 from sqlalchemy.orm import Session
 
 # _CONSTANTS
-from pysql_repo._constants.constants import _PARAM_SESSION
+from pysql_repo._constants.constants import PARAM_SESSION as _PARAM_SESSION
+
+
+from typing import Union, Dict, Any, List
 
 
 def check_values(as_list: bool = False):
+    """
+    Decorator that checks the validity of the 'values' argument passed to a function.
+
+    Args:
+        as_list (bool, optional): Specifies whether the 'values' argument should be a list of dictionaries or a single dictionary. Defaults to False.
+
+    Raises:
+        TypeError: If the 'values' argument is not of the expected type or format.
+
+    Returns:
+        function: The decorated function.
+    """
+
     def decorator(func):
         def wrapper(self, *args, **kwargs):
             values_attr: Union[Dict[str, Any], List[Dict[str, Any]]] = kwargs.get(
@@ -48,6 +64,16 @@ def check_values(as_list: bool = False):
 def with_session(
     param_session: str = _PARAM_SESSION,
 ):
+    """
+    Decorator that provides a session to the decorated method.
+
+    Args:
+        param_session (str, optional): The name of the session parameter. Defaults to _PARAM_SESSION.
+
+    Returns:
+        function: The decorated function.
+    """
+
     def decorator(func):
         def wrapper(self, *args, **kwargs):
             if not isinstance(self, (Repository, Service)):

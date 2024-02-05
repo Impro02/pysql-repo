@@ -56,6 +56,15 @@ _T = TypeVar("_T", bound=declarative_base())
 
 @dataclass
 class RelationshipOption:
+    """
+    Represents options for a relationship between two entities.
+
+    Attributes:
+        lazy (LoadingTechnique): The loading technique for the relationship.
+        added_criteria (Optional[BinaryExpression]): Additional criteria for the relationship.
+        children (Dict[InstrumentedAttribute, "RelationshipOption"]): Child relationships.
+    """
+
     lazy: LoadingTechnique
     added_criteria: Optional[BinaryExpression] = field(default=None)
     children: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
@@ -74,6 +83,23 @@ def build_select_stmt(
     direction: Optional[Union[List[str], str]] = None,
     limit: int = None,
 ) -> Select[Tuple[_T]]:
+    """
+    Builds a SELECT statement with optional filters, group by, order by, and limit clauses.
+
+    Args:
+        stmt (Select[Tuple[_T]]): The base SELECT statement.
+        model (Optional[Type[_T]]): The model class associated with the SELECT statement.
+        filters (Optional[_FilterType]): The filters to apply to the SELECT statement.
+        optional_filters (Optional[_FilterType]): The optional filters to apply to the SELECT statement.
+        relationship_options (Optional[Dict[InstrumentedAttribute, RelationshipOption]]): The relationship options to apply to the SELECT statement.
+        group_by (Optional[ColumnExpressionArgument]): The columns to group the SELECT statement by.
+        order_by (Optional[Union[List[str], str]]): The columns to order the SELECT statement by.
+        direction (Optional[Union[List[str], str]]): The direction of the ordering.
+        limit (int): The maximum number of rows to return.
+
+    Returns:
+        Select[Tuple[_T]]: The modified SELECT statement.
+    """
     stmt = apply_relationship_options(
         stmt=stmt,
         relationship_options=relationship_options,
@@ -112,6 +138,18 @@ def build_update_stmt(
     values: Dict,
     filters: Optional[_FilterType] = None,
 ) -> ReturningUpdate[Tuple[_T]]:
+    """
+    Build an SQL update statement for the given model, values, and filters.
+
+    Args:
+        model (Type[_T]): The model class to update.
+        values (Dict): A dictionary containing the column-value pairs to update.
+        filters (Optional[_FilterType], optional): The filters to apply to the update statement. Defaults to None.
+
+    Returns:
+        ReturningUpdate[Tuple[_T]]: The SQL update statement.
+
+    """
     return (
         apply_filters(
             stmt=update(model),
@@ -125,6 +163,16 @@ def build_update_stmt(
 def build_insert_stmt(
     model: Type[_T],
 ) -> ReturningInsert[Tuple[_T]]:
+    """
+    Build and return an insert statement for the given model.
+
+    Args:
+        model (Type[_T]): The model class to build the insert statement for.
+
+    Returns:
+        ReturningInsert[Tuple[_T]]: The insert statement with a returning clause.
+
+    """
     return insert(model).returning(model)
 
 
@@ -132,6 +180,17 @@ def build_delete_stmt(
     model: Type[_T],
     filters: _FilterType,
 ) -> ReturningDelete[Tuple[_T]]:
+    """
+    Build a delete statement for the given model and filters.
+
+    Args:
+        model (Type[_T]): The model class to delete from.
+        filters (_FilterType): The filters to apply to the delete statement.
+
+    Returns:
+        ReturningDelete[Tuple[_T]]: The delete statement with applied filters.
+
+    """
     return apply_filters(
         stmt=delete(model),
         filter_dict=filters,
@@ -142,6 +201,18 @@ def select_distinct(
     model: Type[_T],
     expr: ColumnExpressionArgument,
 ) -> Select[Tuple[_T]]:
+    """
+    Selects distinct values from a column expression.
+
+    Args:
+        model: The model type to select from.
+        expr: The column expression to select distinct values from.
+
+    Returns:
+        A SQLAlchemy Select object that selects distinct values from the given column expression.
+        If the column expression is None, it selects all columns from the model.
+
+    """
     return select(distinct(expr)) if expr is not None else select(model)
 
 
@@ -149,6 +220,16 @@ def apply_group_by(
     stmt: Select[Tuple[_T]],
     group_by: ColumnExpressionArgument,
 ) -> Select[Tuple[_T]]:
+    """
+    Apply the GROUP BY clause to the given SQL statement.
+
+    Args:
+        stmt (Select[Tuple[_T]]): The SQL statement to apply the GROUP BY clause to.
+        group_by (ColumnExpressionArgument): The column or expression to group by.
+
+    Returns:
+        Select[Tuple[_T]]: The modified SQL statement with the GROUP BY clause applied.
+    """
     return stmt.group_by(group_by) if group_by is not None else stmt
 
 
@@ -157,6 +238,18 @@ def apply_relationship_options(
     relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
     parents: List[InstrumentedAttribute] = None,
 ) -> Union[Select[Tuple[_T]], Update]:
+    """
+    Apply relationship options to a SQLAlchemy statement.
+
+    Args:
+        stmt (Union[Select[Tuple[_T]], Update]): The SQLAlchemy statement to apply the relationship options to.
+        relationship_options (Dict[InstrumentedAttribute, RelationshipOption]): A dictionary of relationship options.
+        parents (List[InstrumentedAttribute], optional): The list of parent relationships. Defaults to None.
+
+    Returns:
+        Union[Select[Tuple[_T]], Update]: The modified SQLAlchemy statement with the applied relationship options.
+    """
+
     def get_load(
         loading_technique: LoadingTechnique,
         items: List[InstrumentedAttribute],
@@ -226,6 +319,17 @@ def apply_filters(
     filter_dict: _FilterType,
     with_optional: bool = False,
 ) -> Union[Select[Tuple[_T]], Update, Delete]:
+    """
+    Apply filters to the given statement.
+
+    Args:
+        stmt (Union[Select[Tuple[_T]], Update]): The statement to apply filters to.
+        filter_dict (_FilterType): The dictionary containing the filters.
+        with_optional (bool, optional): Whether to include optional filters. Defaults to False.
+
+    Returns:
+        Union[Select[Tuple[_T]], Update, Delete]: The statement with applied filters.
+    """
     filters = get_filters(
         filters=filter_dict,
         with_optional=with_optional,
@@ -240,6 +344,18 @@ def apply_order_by(
     order_by: Union[List[str], str],
     direction: Union[List[str], str],
 ) -> Select[Tuple[_T]]:
+    """
+    Apply order by clause to the given SQLAlchemy select statement.
+
+    Args:
+        stmt (Select[Tuple[_T]]): The SQLAlchemy select statement.
+        model (Type[_T]): The model class.
+        order_by (Union[List[str], str]): The column(s) to order by.
+        direction (Union[List[str], str]): The direction(s) of the ordering.
+
+    Returns:
+        Select[Tuple[_T]]: The modified SQLAlchemy select statement with order by clause.
+    """
     if order_by is None or direction is None:
         return stmt
 
@@ -268,6 +384,19 @@ def apply_pagination(
     page: int,
     per_page: int,
 ) -> Tuple[Select[Tuple[_T]], str]:
+    """
+    Apply pagination to a SQLAlchemy select statement.
+
+    Args:
+        session (Session): The SQLAlchemy session object.
+        stmt (Select[Tuple[_T]]): The select statement to apply pagination to.
+        page (int): The page number.
+        per_page (int): The number of results per page.
+
+    Returns:
+        Tuple[Select[Tuple[_T]], str]: A tuple containing the modified select statement
+        with pagination applied, and a JSON string representing the pagination information.
+    """
     if page is None or per_page is None:
         return stmt, None
 
@@ -294,6 +423,19 @@ async def async_apply_pagination(
     page: int,
     per_page: int,
 ) -> Tuple[Select[Tuple[_T]], str]:
+    """
+    Apply pagination to a SQLAlchemy select statement asynchronously.
+
+    Args:
+        session (AsyncSession): The SQLAlchemy async session.
+        stmt (Select[Tuple[_T]]): The select statement to apply pagination to.
+        page (int): The page number.
+        per_page (int): The number of results per page.
+
+    Returns:
+        Tuple[Select[Tuple[_T]], str]: A tuple containing the modified select statement
+        with pagination applied, and a JSON string representing the pagination details.
+    """
     if page is None or per_page is None:
         return stmt, None
 
@@ -318,6 +460,16 @@ def apply_limit(
     stmt: Select[Tuple[_T]],
     limit: int,
 ) -> Select[Tuple[_T]]:
+    """
+    Apply a limit to the given SQL statement.
+
+    Args:
+        stmt (Select[Tuple[_T]]): The SQL statement to apply the limit to.
+        limit (int): The maximum number of rows to return.
+
+    Returns:
+        Select[Tuple[_T]]: The modified SQL statement with the limit applied.
+    """
     return stmt.limit(limit) if limit is not None else stmt
 
 
@@ -325,6 +477,17 @@ def get_conditions_from_dict(
     values: _FilterType,
     with_optional: bool = False,
 ) -> List[ColumnExpressionArgument]:
+    """
+    Convert a dictionary of filter conditions into a list of SQLAlchemy conditions.
+
+    Args:
+        values (dict): A dictionary containing the filter conditions.
+        with_optional (bool, optional): Whether to include optional conditions with a value of None. Defaults to False.
+
+    Returns:
+        List[ColumnExpressionArgument]: A list of SQLAlchemy conditions.
+
+    """
     conditions = []
     for key, value in values.items():
         if type(value) is set:
@@ -485,6 +648,16 @@ def get_filters(
     filters: _FilterType,
     with_optional: bool = False,
 ) -> List[ColumnExpressionArgument]:
+    """
+    Get the conditions for filtering data based on the given filters.
+
+    Args:
+        filters (dict): The filters to apply on the data.
+        with_optional (bool, optional): Whether to include optional filters. Defaults to False.
+
+    Returns:
+        List[ColumnExpressionArgument]: The conditions for filtering the data.
+    """
     if filters is None:
         return []
     if not isinstance(filters, dict):

@@ -27,12 +27,12 @@ from pysql_repo._decorators import check_values as _check_values, with_session
 from pysql_repo._utils import (
     _FilterType,
     RelationshipOption,
-    build_delete_stmt,
-    build_insert_stmt,
-    build_select_stmt,
-    build_update_stmt,
-    select_distinct,
-    apply_pagination,
+    build_delete_stmt as _build_delete_stmt,
+    build_insert_stmt as _build_insert_stmt,
+    build_select_stmt as _build_select_stmt,
+    build_update_stmt as _build_update_stmt,
+    select_distinct as _select_distinct,
+    apply_pagination as _apply_pagination,
 )
 
 
@@ -40,50 +40,42 @@ _T = TypeVar("_T", bound=declarative_base())
 
 
 class Repository:
+    """
+    Represents a repository for database operations.
+
+    Attributes:
+        _session_factory: The session factory used for creating sessions.
+
+    Methods:
+        session_manager(): Returns the session factory.
+        _select(): Selects a single row from the database.
+        _select_stmt(): Selects a single row from the database using a custom statement.
+        _select_all(): Selects all rows from the database.
+        _select_all_stmt(): Selects all rows from the database using a custom statement.
+        _select_paginate(): Selects a paginated set of rows from the database.
+        _select_paginate_stmt(): Selects a paginated set of rows from the database using a custom statement.
+    """
+
     def __init__(
         self,
         session_factory: Callable[..., AbstractContextManager[Session]],
     ) -> None:
+        """
+        Initialize a Repository object.
+
+        Args:
+            session_factory: A callable that returns a context manager for a database session.
+        """
         self._session_factory = session_factory
 
-    def session_manager(self):
+    def session_manager(self) -> AbstractContextManager[Session]:
+        """
+        Get a session manager.
+
+        Returns:
+            AbstractContextManager[Session]: An context manager for managing database sessions.
+        """
         return self._session_factory()
-
-    def _build_query_paginate(
-        self,
-        session: Session,
-        stmt: Select[Tuple[_T]],
-        model: Type[_T],
-        page: int,
-        per_page: int,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute, RelationshipOption]
-        ] = None,
-        group_by: Optional[ColumnExpressionArgument] = None,
-        order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[Union[List[str], str]] = None,
-        limit: int = None,
-    ) -> Tuple[Select[Tuple[_T]], str]:
-        stmt = build_select_stmt(
-            stmt=stmt,
-            model=model,
-            filters=filters,
-            optional_filters=optional_filters,
-            relationship_options=relationship_options,
-            group_by=group_by,
-            order_by=order_by,
-            direction=direction,
-            limit=limit,
-        )
-
-        return apply_pagination(
-            session=session,
-            stmt=stmt,
-            page=page,
-            per_page=per_page,
-        )
 
     @with_session()
     def _select(
@@ -97,7 +89,21 @@ class Repository:
         ] = None,
         session: Optional[Session] = None,
     ) -> Optional[_T]:
-        stmt = select_distinct(
+        """
+        Select a single object from the database.
+
+        Args:
+            model: The model class representing the table.
+            distinct: Optional distinct column expression.
+            filters: Optional filters to apply to the query.
+            optional_filters: Optional filters to apply conditionally.
+            relationship_options: Optional relationship options.
+            session: Optional database session.
+
+        Returns:
+            The selected object or None if not found.
+        """
+        stmt = _select_distinct(
             model=model,
             expr=distinct,
         )
@@ -122,7 +128,21 @@ class Repository:
         group_by: Optional[ColumnExpressionArgument] = None,
         session: Optional[Session] = None,
     ) -> Optional[_T]:
-        stmt = build_select_stmt(
+        """
+        Select a single object from the database using a pre-built statement.
+
+        Args:
+            stmt: The pre-built SQL statement.
+            filters: Optional filters to apply to the query.
+            optional_filters: Optional filters to apply conditionally.
+            relationship_options: Optional relationship options.
+            group_by: Optional column expression to group by.
+            session: Optional database session.
+
+        Returns:
+            The selected object or None if not found.
+        """
+        stmt = _build_select_stmt(
             stmt=stmt,
             filters=filters,
             optional_filters=optional_filters,
@@ -147,7 +167,24 @@ class Repository:
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
-        stmt = select_distinct(
+        """
+        Select all objects from the database.
+
+        Args:
+            model: The model class representing the table.
+            distinct: Optional list of distinct column expressions.
+            filters: Optional filters to apply to the query.
+            optional_filters: Optional filters to apply conditionally.
+            relationship_options: Optional relationship options.
+            order_by: Optional column(s) to order the results by.
+            direction: Optional direction of the ordering.
+            limit: Optional limit on the number of results.
+            session: Optional database session.
+
+        Returns:
+            A sequence of selected objects.
+        """
+        stmt = _select_distinct(
             model=model,
             expr=distinct,
         )
@@ -180,7 +217,25 @@ class Repository:
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
-        stmt = build_select_stmt(
+        """
+        Select all objects from the database using a pre-built statement.
+
+        Args:
+            stmt: The pre-built SQL statement.
+            model: The model class representing the table.
+            filters: Optional filters to apply to the query.
+            optional_filters: Optional filters to apply conditionally.
+            relationship_options: Optional relationship options.
+            group_by: Optional column expression to group by.
+            order_by: Optional column(s) to order the results by.
+            direction: Optional direction of the ordering.
+            limit: Optional limit on the number of results.
+            session: Optional database session.
+
+        Returns:
+            A sequence of selected objects.
+        """
+        stmt = _build_select_stmt(
             stmt=stmt,
             model=model,
             filters=filters,
@@ -211,7 +266,26 @@ class Repository:
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Tuple[Sequence[_T], str]:
-        stmt = select_distinct(
+        """
+        Select objects from the database with pagination.
+
+        Args:
+            model: The model class representing the table.
+            page: The page number.
+            per_page: The number of items per page.
+            distinct: Optional distinct column expression.
+            filters: Optional filters to apply to the query.
+            optional_filters: Optional filters to apply conditionally.
+            relationship_options: Optional relationship options.
+            order_by: Optional column(s) to order the results by.
+            direction: Optional direction of the ordering.
+            limit: Optional limit on the number of results.
+            session: Optional database session.
+
+        Returns:
+            A tuple containing the selected objects and pagination information.
+        """
+        stmt = _select_distinct(
             model=model,
             expr=distinct,
         )
@@ -248,12 +322,29 @@ class Repository:
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Tuple[Sequence[_T], str]:
-        stmt, pagination = self._build_query_paginate(
-            session=session,
+        """
+        Select objects from the database with pagination using a pre-built statement.
+
+        Args:
+            stmt: The pre-built SQL statement.
+            model: The model class representing the table.
+            page: The page number.
+            per_page: The number of items per page.
+            filters: Optional filters to apply to the query.
+            optional_filters: Optional filters to apply conditionally.
+            relationship_options: Optional relationship options.
+            group_by: Optional column expression to group by.
+            order_by: Optional column(s) to order the results by.
+            direction: Optional direction of the ordering.
+            limit: Optional limit on the number of results.
+            session: Optional database session.
+
+        Returns:
+            A tuple containing the selected objects and pagination information.
+        """
+        stmt = _build_select_stmt(
             stmt=stmt,
             model=model,
-            page=page,
-            per_page=per_page,
             filters=filters,
             optional_filters=optional_filters,
             relationship_options=relationship_options,
@@ -261,6 +352,13 @@ class Repository:
             order_by=order_by,
             direction=direction,
             limit=limit,
+        )
+
+        stmt, pagination = _apply_pagination(
+            session=session,
+            stmt=stmt,
+            page=page,
+            per_page=per_page,
         )
 
         return session.execute(stmt).unique().scalars().all(), pagination
@@ -276,6 +374,20 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
+        """
+        Update multiple objects in the database.
+
+        Args:
+            model: The model class representing the table.
+            values: A dictionary of column-value pairs to update.
+            filters: Optional filters to apply to the query.
+            flush: Whether to flush the session after the update.
+            commit: Whether to commit the session after the update.
+            session: Optional database session.
+
+        Returns:
+            A sequence of updated objects.
+        """
         if (
             values is None
             or not isinstance(values, dict)
@@ -284,7 +396,7 @@ class Repository:
         ):
             raise TypeError("values expected to be Dict[str, Any]")
 
-        stmt = build_update_stmt(
+        stmt = _build_update_stmt(
             model=model,
             values=values,
             filters=filters,
@@ -312,7 +424,21 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Optional[_T]:
-        stmt = build_update_stmt(
+        """
+        Update a single object in the database.
+
+        Args:
+            model: The model class representing the table.
+            values: A dictionary of column-value pairs to update.
+            filters: Optional filters to apply to the query.
+            flush: Whether to flush the session after the update.
+            commit: Whether to commit the session after the update.
+            session: Optional database session.
+
+        Returns:
+            The updated object or None if not found.
+        """
+        stmt = _build_update_stmt(
             model=model,
             values=values,
             filters=filters,
@@ -342,7 +468,20 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
-        stmt = build_insert_stmt(model=model)
+        """
+        Add multiple objects to the database.
+
+        Args:
+            model: The model class representing the table.
+            values: A list of dictionaries containing column-value pairs for each object.
+            flush: Whether to flush the session after adding the objects.
+            commit: Whether to commit the session after adding the objects.
+            session: Optional database session.
+
+        Returns:
+            A sequence of added objects.
+        """
+        stmt = _build_insert_stmt(model=model)
 
         sequence = session.execute(stmt, values).unique().scalars().all()
 
@@ -366,7 +505,20 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> Optional[_T]:
-        stmt = build_insert_stmt(model=model)
+        """
+        Add a single object to the database.
+
+        Args:
+            model: The model class representing the table.
+            values: A dictionary of column-value pairs for the object.
+            flush: Whether to flush the session after adding the object.
+            commit: Whether to commit the session after adding the object.
+            session: Optional database session.
+
+        Returns:
+            The added object.
+        """
+        stmt = _build_insert_stmt(model=model)
 
         item = session.execute(stmt, values).unique().scalar_one()
 
@@ -389,7 +541,20 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> bool:
-        stmt = build_delete_stmt(
+        """
+        Delete multiple objects from the database.
+
+        Args:
+            model: The model class representing the table.
+            filters: Optional filters to apply to the query.
+            flush: Whether to flush the session after the deletion.
+            commit: Whether to commit the session after the deletion.
+            session: Optional database session.
+
+        Returns:
+            True if any objects were deleted, False otherwise.
+        """
+        stmt = _build_delete_stmt(
             model=model,
             filters=filters,
         )
@@ -415,7 +580,20 @@ class Repository:
         commit: bool = False,
         session: Optional[Session] = None,
     ) -> bool:
-        stmt = build_delete_stmt(
+        """
+        Delete a single object from the database.
+
+        Args:
+            model: The model class representing the table.
+            filters: Optional filters to apply to the query.
+            flush: Whether to flush the session after the deletion.
+            commit: Whether to commit the session after the deletion.
+            session: Optional database session.
+
+        Returns:
+            True if the object was deleted, False otherwise.
+        """
+        stmt = _build_delete_stmt(
             model=model,
             filters=filters,
         )

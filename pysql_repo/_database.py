@@ -19,6 +19,16 @@ from pysql_repo._database_base import (
 
 
 class DataBase(_Database):
+    """
+    Represents a database connection and provides methods for database operations.
+
+    Args:
+        databases_config (dict): A dictionary containing the configuration for the databases.
+        logger (Logger): An instance of the logger to use for logging.
+        base (DeclarativeMeta): The base class for the database models.
+        metadata_views (list[MetaData], optional): A list of metadata views. Defaults to None.
+    """
+
     def __init__(
         self,
         databases_config: _DataBaseConfigTypedDict,
@@ -26,6 +36,15 @@ class DataBase(_Database):
         base: DeclarativeMeta,
         metadata_views: List[MetaData] | None = None,
     ) -> None:
+        """
+        Initialize a new instance of the _Database class.
+
+        Args:
+            databases_config (_DataBaseConfigTypedDict): A dictionary containing the configuration for the databases.
+            logger (Logger): The logger object to be used for logging.
+            base (DeclarativeMeta): The base class for the declarative models.
+            metadata_views (List[MetaData] | None, optional): A list of metadata views. Defaults to None.
+        """
         super().__init__(databases_config, logger, base, metadata_views)
 
         self._engine = create_engine(
@@ -40,10 +59,13 @@ class DataBase(_Database):
             expire_on_commit=False,
         )
 
-        if self._database_config.get("create_on_start"):
-            self.create_database()
-
     def create_database(self) -> None:
+        """
+        Creates the database by dropping existing views and creating all tables defined in the metadata.
+
+        Raises:
+            Exception: If an error occurs during the database creation process.
+        """
         insp = inspect(self._engine)
         current_view_names = [item.lower() for item in insp.get_view_names()]
 
@@ -56,6 +78,15 @@ class DataBase(_Database):
 
     @contextmanager
     def session_factory(self) -> Generator[Session, Any, None]:
+        """
+        Context manager for creating a session.
+
+        Yields:
+            Session: The session object.
+
+        Raises:
+            Exception: If an error occurs during the session creation process.
+        """
         session = self._session_factory()
         try:
             yield session
@@ -72,6 +103,20 @@ class DataBase(_Database):
         table_names: list[str],
         timezone="CET",
     ):
+        """
+        Initializes tables in the database by inserting data from JSON files.
+
+        Args:
+            directory (Path): The directory containing the JSON files.
+            table_names (list[str]): A list of table names to initialize.
+            timezone (str, optional): The timezone to use for date and time values. Defaults to "CET".
+
+        Returns:
+            list[Table]: The ordered list of tables that were initialized.
+
+        Raises:
+            Exception: If an error occurs during the initialization process.
+        """
         ordered_tables = self._get_ordered_tables(table_names=table_names)
 
         with self.session_factory() as session:

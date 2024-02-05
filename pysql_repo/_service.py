@@ -10,6 +10,17 @@ _T = TypeVar("_T", bound=Repository)
 
 
 class Service(Generic[_T]):
+    """
+    A generic service class.
+
+    Attributes:
+        _repository: The repository object.
+        _logger: The logger object.
+
+    Methods:
+        session_manager(): Returns the session factory.
+    """
+
     def __init__(
         self,
         repository: _T,
@@ -19,4 +30,7 @@ class Service(Generic[_T]):
         self._logger = logger
 
     def session_manager(self):
+        """
+        Returns the session manager object.
+        """
         return self._repository.session_manager()

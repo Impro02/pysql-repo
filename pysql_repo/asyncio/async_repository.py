@@ -29,12 +29,12 @@ from pysql_repo.asyncio.async_decorator import with_async_session
 from pysql_repo._utils import (
     _FilterType,
     RelationshipOption,
-    async_apply_pagination,
-    build_delete_stmt,
-    build_insert_stmt,
-    build_select_stmt,
-    build_update_stmt,
-    select_distinct,
+    async_apply_pagination as _async_apply_pagination,
+    build_delete_stmt as _build_delete_stmt,
+    build_insert_stmt as _build_insert_stmt,
+    build_select_stmt as _build_select_stmt,
+    build_update_stmt as _build_update_stmt,
+    select_distinct as _select_distinct,
 )
 
 
@@ -42,50 +42,46 @@ _T = TypeVar("_T", bound=declarative_base())
 
 
 class AsyncRepository:
+    """
+    Represents an asynchronous repository for database operations.
+
+    Attributes:
+        _session_factory: The session factory used for creating sessions.
+
+    Methods:
+        session_manager(): Returns the session factory.
+        _select(): Selects a single row from the database.
+        _select_stmt(): Selects a single row from the database using a custom statement.
+        _select_all(): Selects all rows from the database.
+        _select_all_stmt(): Selects all rows from the database using a custom statement.
+        _select_paginate(): Selects a paginated set of rows from the database.
+        _select_paginate_stmt(): Selects a paginated set of rows from the database using a custom statement.
+    """
+
     def __init__(
         self,
         session_factory: Callable[..., AbstractAsyncContextManager[AsyncSession]],
     ) -> None:
+        """
+        Initialize the AsyncRepository.
+
+        Args:
+            session_factory: A callable that returns an asynchronous context manager
+                             for creating and managing database sessions.
+
+        Returns:
+            None
+        """
         self._session_factory = session_factory
 
-    def session_manager(self):
+    def session_manager(self) -> AbstractAsyncContextManager[AsyncSession]:
+        """
+        Returns an asynchronous context manager for managing database sessions.
+
+        Returns:
+            AbstractAsyncContextManager[AsyncSession]: An asynchronous context manager for managing database sessions.
+        """
         return self._session_factory()
-
-    async def _build_query_paginate(
-        self,
-        session: AsyncSession,
-        stmt: Select[Tuple[_T]],
-        model: Type[_T],
-        page: int,
-        per_page: int,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute, RelationshipOption]
-        ] = None,
-        group_by: Optional[ColumnExpressionArgument] = None,
-        order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[Union[List[str], str]] = None,
-        limit: int = None,
-    ) -> Tuple[Select[Tuple[_T]], str]:
-        stmt = build_select_stmt(
-            stmt=stmt,
-            model=model,
-            filters=filters,
-            optional_filters=optional_filters,
-            relationship_options=relationship_options,
-            group_by=group_by,
-            order_by=order_by,
-            direction=direction,
-            limit=limit,
-        )
-
-        return await async_apply_pagination(
-            session=session,
-            stmt=stmt,
-            page=page,
-            per_page=per_page,
-        )
 
     @with_async_session()
     async def _select(
@@ -99,7 +95,22 @@ class AsyncRepository:
         ] = None,
         session: Optional[AsyncSession] = None,
     ) -> Optional[Row[_T]]:
-        stmt = select_distinct(
+        """
+        Selects a single row from the database.
+
+        Args:
+            model: The model class.
+            distinct: The distinct column expression.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            session: The session to use.
+
+        Returns:
+            The selected row.
+
+        """
+        stmt = _select_distinct(
             model=model,
             expr=distinct,
         )
@@ -124,7 +135,22 @@ class AsyncRepository:
         group_by: Optional[ColumnExpressionArgument] = None,
         session: Optional[AsyncSession] = None,
     ) -> Optional[Row[_T]]:
-        stmt = build_select_stmt(
+        """
+        Selects a single row from the database using a custom statement.
+
+        Args:
+            stmt: The custom select statement.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            group_by: The column expression to group by.
+            session: The session to use.
+
+        Returns:
+            The selected row.
+
+        """
+        stmt = _build_select_stmt(
             stmt=stmt,
             filters=filters,
             optional_filters=optional_filters,
@@ -151,7 +177,25 @@ class AsyncRepository:
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        stmt = select_distinct(
+        """
+        Selects all rows from the database.
+
+        Args:
+            model: The model class.
+            distinct: The distinct column expressions.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of rows to return.
+            session: The session to use.
+
+        Returns:
+            The selected rows.
+
+        """
+        stmt = _select_distinct(
             model=model,
             expr=distinct,
         )
@@ -184,7 +228,26 @@ class AsyncRepository:
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        stmt = build_select_stmt(
+        """
+        Selects all rows from the database using a custom statement.
+
+        Args:
+            stmt: The custom select statement.
+            model: The model class.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            group_by: The column expression to group by.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of rows to return.
+            session: The session to use.
+
+        Returns:
+            The selected rows.
+
+        """
+        stmt = _build_select_stmt(
             stmt=stmt,
             model=model,
             filters=filters,
@@ -217,7 +280,27 @@ class AsyncRepository:
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
-        stmt = select_distinct(
+        """
+        Selects a paginated set of rows from the database.
+
+        Args:
+            model: The model class.
+            page: The page number.
+            per_page: The number of rows per page.
+            distinct: The distinct column expression.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of rows to return.
+            session: The session to use.
+
+        Returns:
+            A tuple containing the selected rows and pagination information.
+
+        """
+        stmt = _select_distinct(
             model=model,
             expr=distinct,
         )
@@ -254,12 +337,30 @@ class AsyncRepository:
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
-        stmt, pagination = await self._build_query_paginate(
-            session=session,
+        """
+        Selects a paginated set of rows from the database using a custom statement.
+
+        Args:
+            stmt: The custom select statement.
+            model: The model class.
+            page: The page number.
+            per_page: The number of rows per page.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            group_by: The column expression to group by.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of rows to return.
+            session: The session to use.
+
+        Returns:
+            A tuple containing the selected rows and pagination information.
+
+        """
+        stmt = _build_select_stmt(
             stmt=stmt,
             model=model,
-            page=page,
-            per_page=per_page,
             filters=filters,
             optional_filters=optional_filters,
             relationship_options=relationship_options,
@@ -267,6 +368,13 @@ class AsyncRepository:
             order_by=order_by,
             direction=direction,
             limit=limit,
+        )
+
+        stmt, pagination = await _async_apply_pagination(
+            session=session,
+            stmt=stmt,
+            page=page,
+            per_page=per_page,
         )
 
         result = await session.execute(stmt)
@@ -284,7 +392,22 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        stmt = build_update_stmt(
+        """
+        Updates multiple rows in the database.
+
+        Args:
+            model: The model class.
+            values: The values to update.
+            filters: The filters to apply.
+            flush: Whether to flush the session.
+            commit: Whether to commit the session.
+            session: The session to use.
+
+        Returns:
+            The updated rows.
+
+        """
+        stmt = _build_update_stmt(
             model=model,
             values=values,
             filters=filters,
@@ -314,7 +437,22 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
-        stmt = build_update_stmt(
+        """
+        Updates a single row in the database.
+
+        Args:
+            model: The model class.
+            values: The values to update.
+            filters: The filters to apply.
+            flush: Whether to flush the session.
+            commit: Whether to commit the session.
+            session: The session to use.
+
+        Returns:
+            The updated row.
+
+        """
+        stmt = _build_update_stmt(
             model=model,
             values=values,
             filters=filters,
@@ -346,7 +484,21 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
-        stmt = build_insert_stmt(model=model)
+        """
+        Adds multiple rows to the database.
+
+        Args:
+            model: The model class.
+            values: The values to add.
+            flush: Whether to flush the session.
+            commit: Whether to commit the session.
+            session: The session to use.
+
+        Returns:
+            The added rows.
+
+        """
+        stmt = _build_insert_stmt(model=model)
 
         result = await session.execute(stmt, values)
 
@@ -372,7 +524,21 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
-        stmt = build_insert_stmt(model=model)
+        """
+        Adds a single row to the database.
+
+        Args:
+            model: The model class.
+            values: The values to add.
+            flush: Whether to flush the session.
+            commit: Whether to commit the session.
+            session: The session to use.
+
+        Returns:
+            The added row.
+
+        """
+        stmt = _build_insert_stmt(model=model)
 
         result = await session.execute(stmt, values)
 
@@ -397,7 +563,21 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> bool:
-        stmt = build_delete_stmt(
+        """
+        Deletes multiple rows from the database.
+
+        Args:
+            model: The model class.
+            filters: The filters to apply.
+            flush: Whether to flush the session.
+            commit: Whether to commit the session.
+            session: The session to use.
+
+        Returns:
+            True if the rows were deleted successfully, False otherwise.
+
+        """
+        stmt = _build_delete_stmt(
             model=model,
             filters=filters,
         )
@@ -425,7 +605,21 @@ class AsyncRepository:
         commit: bool = False,
         session: Optional[AsyncSession] = None,
     ) -> bool:
-        stmt = build_delete_stmt(
+        """
+        Deletes a single row from the database.
+
+        Args:
+            model: The model class.
+            filters: The filters to apply.
+            flush: Whether to flush the session.
+            commit: Whether to commit the session.
+            session: The session to use.
+
+        Returns:
+            True if the row was deleted successfully, False otherwise.
+
+        """
+        stmt = _build_delete_stmt(
             model=model,
             filters=filters,
         )
