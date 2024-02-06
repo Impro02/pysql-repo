@@ -84,7 +84,7 @@ def build_select_stmt(
     limit: int = None,
 ) -> Select[Tuple[_T]]:
     """
-    Builds a SELECT statement with optional filters, group by, order by, and limit clauses.
+    Builds and returns a select statement with optional filters, group by, order by, and limit clauses.
 
     Args:
         stmt (Select[Tuple[_T]]): The base SELECT statement.
@@ -139,7 +139,7 @@ def build_update_stmt(
     filters: Optional[_FilterType] = None,
 ) -> ReturningUpdate[Tuple[_T]]:
     """
-    Build an SQL update statement for the given model, values, and filters.
+    Build and delete an update statement for the given model, values, and filters.
 
     Args:
         model (Type[_T]): The model class to update.
@@ -148,7 +148,6 @@ def build_update_stmt(
 
     Returns:
         ReturningUpdate[Tuple[_T]]: The SQL update statement.
-
     """
     return (
         apply_filters(
@@ -171,7 +170,6 @@ def build_insert_stmt(
 
     Returns:
         ReturningInsert[Tuple[_T]]: The insert statement with a returning clause.
-
     """
     return insert(model).returning(model)
 
@@ -181,7 +179,7 @@ def build_delete_stmt(
     filters: _FilterType,
 ) -> ReturningDelete[Tuple[_T]]:
     """
-    Build a delete statement for the given model and filters.
+    Build and return a delete statement for the given model and filters.
 
     Args:
         model (Type[_T]): The model class to delete from.
@@ -189,7 +187,6 @@ def build_delete_stmt(
 
     Returns:
         ReturningDelete[Tuple[_T]]: The delete statement with applied filters.
-
     """
     return apply_filters(
         stmt=delete(model),
@@ -211,7 +208,6 @@ def select_distinct(
     Returns:
         A SQLAlchemy Select object that selects distinct values from the given column expression.
         If the column expression is None, it selects all columns from the model.
-
     """
     return select(distinct(expr)) if expr is not None else select(model)
 

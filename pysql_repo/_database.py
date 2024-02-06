@@ -1,10 +1,10 @@
 # MODULES
-from typing import Any, Generator, List
+from typing import Any, Generator, List, Optional
 from pathlib import Path
 from logging import Logger
 
 # SQLALCHEMY
-from sqlalchemy import text, MetaData, create_engine
+from sqlalchemy import text, MetaData, create_engine, Table
 from sqlalchemy.orm import DeclarativeMeta, Session, sessionmaker
 from sqlalchemy.inspection import inspect
 
@@ -23,10 +23,24 @@ class DataBase(_Database):
     Represents a database connection and provides methods for database operations.
 
     Args:
-        databases_config (dict): A dictionary containing the configuration for the databases.
-        logger (Logger): An instance of the logger to use for logging.
-        base (DeclarativeMeta): The base class for the database models.
-        metadata_views (list[MetaData], optional): A list of metadata views. Defaults to None.
+        _database_config (DataBaseConfigTypedDict): The configuration for the databases.
+        _engine: (Engine): The engine used for database operations.
+        _logger (Logger): An instance of the logger to use for logging.
+        _base (DeclarativeMeta): The base class for the database models.
+        _metadata_views (Optional[List[MetaData]]): Optional list of metadata views.
+        _session_factory (sessionmaker[Session]): The factory for creating sessions.
+        _views (List[Table]): The list of metadata views.
+
+    Methods:
+        views: Get the list of views in the database.
+        ini: Get the 'ini' property from the database configuration.
+        init_database_dir_json: Get the 'init_database_dir_json' property from the database configuration.
+        _pre_process_data_for_initialization: Pre-processes the data for initialization.
+        _get_pre_process_data_for_initialization: Gets the pre-processed data for initialization.
+        _get_ordered_tables: Gets the ordered tables based on the given table names.
+        create_database: Creates the database by dropping existing views and creating tables and views.
+        session_factory: Context manager for creating a session.
+        init_tables_from_json_files: Initializes tables from JSON files.
     """
 
     def __init__(
@@ -34,7 +48,10 @@ class DataBase(_Database):
         databases_config: _DataBaseConfigTypedDict,
         logger: Logger,
         base: DeclarativeMeta,
-        metadata_views: List[MetaData] | None = None,
+        metadata_views: Optional[List[MetaData]] = None,
+        autoflush: bool = False,
+        expire_on_commit: bool = False,
+        echo: bool = False,
     ) -> None:
         """
         Initialize a new instance of the _Database class.
@@ -49,19 +66,22 @@ class DataBase(_Database):
 
         self._engine = create_engine(
             self._database_config.get("connection_string"),
-            echo=False,
+            echo=echo,
             connect_args=self._database_config.get("connect_args") or {},
         )
 
         self._session_factory = sessionmaker(
             bind=self._engine,
-            autoflush=False,
-            expire_on_commit=False,
+            autoflush=autoflush,
+            expire_on_commit=expire_on_commit,
         )
 
     def create_database(self) -> None:
         """
-        Creates the database by dropping existing views and creating all tables defined in the metadata.
+        Creates the database by dropping existing views and creating all tables and views defined in the metadata.
+
+        Returns:
+            None
 
         Raises:
             Exception: If an error occurs during the database creation process.
@@ -100,16 +120,16 @@ class DataBase(_Database):
     def init_tables_from_json_files(
         self,
         directory: Path,
-        table_names: list[str],
+        table_names: List[str],
         timezone="CET",
-    ):
+    ) -> List[Table]:
         """
         Initializes tables in the database by inserting data from JSON files.
 
         Args:
             directory (Path): The directory containing the JSON files.
-            table_names (list[str]): A list of table names to initialize.
-            timezone (str, optional): The timezone to use for date and time values. Defaults to "CET".
+            table_names (List[str]): A list of table names to initialize.
+            timezone (str): The timezone to use for date and time values. Defaults to "CET".
 
         Returns:
             list[Table]: The ordered list of tables that were initialized.

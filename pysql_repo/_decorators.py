@@ -1,12 +1,8 @@
-# SQLALCHEMY
+# MODULES
 from typing import Any, Dict, List, Union
+
+# SQLALCHEMY
 from sqlalchemy.orm import Session
-
-# _CONSTANTS
-from pysql_repo._constants.constants import PARAM_SESSION as _PARAM_SESSION
-
-
-from typing import Union, Dict, Any, List
 
 
 def check_values(as_list: bool = False):
@@ -62,16 +58,20 @@ def check_values(as_list: bool = False):
 
 
 def with_session(
-    param_session: str = _PARAM_SESSION,
+    param_session: str = "session",
 ):
     """
     Decorator that provides a session to the decorated method.
 
     Args:
-        param_session (str, optional): The name of the session parameter. Defaults to _PARAM_SESSION.
+        param_session (str, optional): The name of the session parameter. Defaults to "session".
+
+    Raises:
+        TypeError: If the decorated object is not an instance of Repository or Service.
+        TypeError: If the session is not an instance of Session.
 
     Returns:
-        function: The decorated function.
+        Callable: The decorated method.
     """
 
     def decorator(func):

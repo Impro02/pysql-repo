@@ -28,13 +28,13 @@ class AsyncDatabase(_Database):
     Represents an asynchronous database.
 
     Attributes:
-        _database_config: The configuration for the databases.
-        _engine: The asynchronous engine used for database operations.
-        _logger: The logger object used for logging.
-        _base: The base class for declarative models.
-        _metadata_views: Optional list of metadata views.
-        _session_factory: The factory for creating asynchronous sessions.
-        _views: The list of metadata views.
+        _database_config (DataBaseConfigTypedDict): The configuration for the databases.
+        _engine: (AsyncEngine): The asynchronous engine used for database operations.
+        _logger (Logger): The logger object used for logging.
+        _base (DeclarativeMeta): The base class for declarative models.
+        _metadata_views (Optional[List[MetaData]]): Optional list of metadata views.
+        _session_factory (async_sessionmaker[AsyncSession]): The factory for creating asynchronous sessions.
+        _views (List[Table]): The list of metadata views.
 
     Methods:
         views: Get the list of views in the database.
@@ -43,7 +43,7 @@ class AsyncDatabase(_Database):
         _pre_process_data_for_initialization: Pre-processes the data for initialization.
         _get_pre_process_data_for_initialization: Gets the pre-processed data for initialization.
         _get_ordered_tables: Gets the ordered tables based on the given table names.
-        create_database: Creates the database by dropping existing views and creating tables.
+        create_database: Creates the database by dropping existing views and creating tables and views.
         session_factory: Context manager for creating an async session.
         init_tables_from_json_files: Initializes tables from JSON files.
     """
@@ -54,6 +54,9 @@ class AsyncDatabase(_Database):
         logger: Logger,
         base: DeclarativeMeta,
         metadata_views: Optional[List[MetaData]] = None,
+        autoflush: bool = False,
+        expire_on_commit: bool = False,
+        echo: bool = False,
     ) -> None:
         """
         Initializes an instance of AsyncDatabase.
@@ -67,34 +70,29 @@ class AsyncDatabase(_Database):
         Returns:
             None
         """
-        self._database_config = databases_config
+        super().__init__(databases_config, logger, base, metadata_views)
+
         self._engine = create_async_engine(
             self._database_config.get("connection_string"),
-            echo=False,
+            echo=echo,
             connect_args=self._database_config.get("connect_args") or {},
         )
-        self._logger = logger
-        self._base = base
-        self._metadata_views = metadata_views
 
         self._session_factory = async_sessionmaker(
             bind=self._engine,
-            autoflush=False,
-            expire_on_commit=False,
+            autoflush=autoflush,
+            expire_on_commit=expire_on_commit,
         )
-
-        self._views = [
-            table
-            for metadata in self._metadata_views or []
-            for table in metadata.sorted_tables
-        ]
 
     async def create_database(self) -> None:
         """
-        Creates the database by dropping existing views and creating tables.
+        Creates the database by dropping existing views and creating all tables and views defined in the metadata.
 
         Returns:
             None
+
+        Raises:
+            Exception: If an error occurs during the database creation process.
         """
 
         def inspect_view_names(conn: Connection):
@@ -123,9 +121,6 @@ class AsyncDatabase(_Database):
 
         Raises:
             Exception: If an exception occurs during the session, it is raised.
-
-        Returns:
-            None
         """
         async with self._session_factory() as session:
             try:
@@ -144,12 +139,12 @@ class AsyncDatabase(_Database):
         timezone: str = "CET",
     ) -> List[Table]:
         """
-        Initializes tables from JSON files.
+        Initializes tables in the database by inserting data from JSON files.
 
         Args:
-            directory: The directory containing the JSON files.
-            table_names: The names of the tables to be initialized.
-            timezone: The timezone to be used for initialization.
+            directory (Path): The directory containing the JSON files.
+            table_names (list[str]): A list of table names to initialize.
+            timezone (str): The timezone to use for date and time values. Defaults to "CET".
 
         Returns:
             List[Table]: The ordered list of tables that were initialized.

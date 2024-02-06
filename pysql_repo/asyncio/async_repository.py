@@ -16,7 +16,7 @@ from typing import (
 from contextlib import AbstractAsyncContextManager
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, Row, Select
+from sqlalchemy import ColumnExpressionArgument, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import InstrumentedAttribute
@@ -49,13 +49,13 @@ class AsyncRepository:
         _session_factory: The session factory used for creating sessions.
 
     Methods:
-        session_manager(): Returns the session factory.
-        _select(): Selects a single row from the database.
-        _select_stmt(): Selects a single row from the database using a custom statement.
-        _select_all(): Selects all rows from the database.
-        _select_all_stmt(): Selects all rows from the database using a custom statement.
-        _select_paginate(): Selects a paginated set of rows from the database.
-        _select_paginate_stmt(): Selects a paginated set of rows from the database using a custom statement.
+        session_manager: Returns the session factory.
+        _select: Selects a single row from the database.
+        _select_stmt: Selects a single row from the database using a custom statement.
+        _select_all: Selects all rows from the database.
+        _select_all_stmt: Selects all rows from the database using a custom statement.
+        _select_paginate: Selects a paginated set of rows from the database.
+        _select_paginate_stmt: Selects a paginated set of rows from the database using a custom statement.
     """
 
     def __init__(
@@ -63,7 +63,7 @@ class AsyncRepository:
         session_factory: Callable[..., AbstractAsyncContextManager[AsyncSession]],
     ) -> None:
         """
-        Initialize the AsyncRepository.
+        Initializes the AsyncRepository.
 
         Args:
             session_factory: A callable that returns an asynchronous context manager
@@ -76,7 +76,7 @@ class AsyncRepository:
 
     def session_manager(self) -> AbstractAsyncContextManager[AsyncSession]:
         """
-        Returns an asynchronous context manager for managing database sessions.
+        Get a session manager.
 
         Returns:
             AbstractAsyncContextManager[AsyncSession]: An asynchronous context manager for managing database sessions.
@@ -94,17 +94,17 @@ class AsyncRepository:
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         session: Optional[AsyncSession] = None,
-    ) -> Optional[Row[_T]]:
+    ) -> Optional[_T]:
         """
-        Selects a single row from the database.
+        Selects a single object from the database.
 
         Args:
-            model: The model class.
+            model: The model class representing the table.
             distinct: The distinct column expression.
             filters: The filters to apply.
             optional_filters: The optional filters to apply.
             relationship_options: The relationship options.
-            session: The session to use.
+            The selected object or None if not found.
 
         Returns:
             The selected row.
@@ -134,9 +134,9 @@ class AsyncRepository:
         ] = None,
         group_by: Optional[ColumnExpressionArgument] = None,
         session: Optional[AsyncSession] = None,
-    ) -> Optional[Row[_T]]:
+    ) -> Optional[_T]:
         """
-        Selects a single row from the database using a custom statement.
+        Selects a single object from the database using a custom statement.
 
         Args:
             stmt: The custom select statement.
@@ -147,7 +147,7 @@ class AsyncRepository:
             session: The session to use.
 
         Returns:
-            The selected row.
+            The selected object or None if not found.
 
         """
         stmt = _build_select_stmt(
@@ -178,21 +178,21 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
         """
-        Selects all rows from the database.
+        Selects all objects from the database.
 
         Args:
-            model: The model class.
+            model: The model class representing the table.
             distinct: The distinct column expressions.
             filters: The filters to apply.
             optional_filters: The optional filters to apply.
             relationship_options: The relationship options.
             order_by: The column(s) to order by.
             direction: The direction of the ordering.
-            limit: The maximum number of rows to return.
+            limit: The maximum number of objects to return.
             session: The session to use.
 
         Returns:
-            The selected rows.
+            A sequence of selected objects.
 
         """
         stmt = _select_distinct(
@@ -229,11 +229,11 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
         """
-        Selects all rows from the database using a custom statement.
+        Selects all objects from the database using a custom statement.
 
         Args:
             stmt: The custom select statement.
-            model: The model class.
+            model: The model class representing the table.
             filters: The filters to apply.
             optional_filters: The optional filters to apply.
             relationship_options: The relationship options.
@@ -244,7 +244,7 @@ class AsyncRepository:
             session: The session to use.
 
         Returns:
-            The selected rows.
+            A sequence of selected objects.
 
         """
         stmt = _build_select_stmt(
@@ -281,23 +281,23 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
         """
-        Selects a paginated set of rows from the database.
+        Selects a paginated set of objects from the database.
 
         Args:
-            model: The model class.
+            model: The model class representing the table.
             page: The page number.
-            per_page: The number of rows per page.
+            per_page: The number of items per page.
             distinct: The distinct column expression.
             filters: The filters to apply.
             optional_filters: The optional filters to apply.
             relationship_options: The relationship options.
             order_by: The column(s) to order by.
             direction: The direction of the ordering.
-            limit: The maximum number of rows to return.
+            limit: The maximum number of objects to return.
             session: The session to use.
 
         Returns:
-            A tuple containing the selected rows and pagination information.
+            A tuple containing the selected objects and pagination information.
 
         """
         stmt = _select_distinct(
@@ -342,9 +342,9 @@ class AsyncRepository:
 
         Args:
             stmt: The custom select statement.
-            model: The model class.
+            model: The model class representing the table.
             page: The page number.
-            per_page: The number of rows per page.
+            per_page: The number of items per page.
             filters: The filters to apply.
             optional_filters: The optional filters to apply.
             relationship_options: The relationship options.
@@ -355,7 +355,7 @@ class AsyncRepository:
             session: The session to use.
 
         Returns:
-            A tuple containing the selected rows and pagination information.
+            A tuple containing the selected objects and pagination information.
 
         """
         stmt = _build_select_stmt(
@@ -393,19 +393,18 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
         """
-        Updates multiple rows in the database.
+        Updates multiple objects in the database.
 
         Args:
-            model: The model class.
-            values: The values to update.
+            model: The model class representing the table.
+            values: A dictionary of column-value pairs to update.
             filters: The filters to apply.
-            flush: Whether to flush the session.
-            commit: Whether to commit the session.
+            flush: Whether to flush the session after the update.
+            commit: Whether to commit the session after the update.
             session: The session to use.
 
         Returns:
-            The updated rows.
-
+            A sequence of updated objects.
         """
         stmt = _build_update_stmt(
             model=model,
@@ -438,19 +437,18 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> Optional[_T]:
         """
-        Updates a single row in the database.
+        Updates a single object in the database.
 
         Args:
-            model: The model class.
-            values: The values to update.
+            model: The model class representing the table.
+            values: A dictionary of column-value pairs to update.
             filters: The filters to apply.
-            flush: Whether to flush the session.
-            commit: Whether to commit the session.
+            flush: Whether to flush the session after the update.
+            commit: Whether to commit the session after the update.
             session: The session to use.
 
         Returns:
-            The updated row.
-
+            The updated object or None if not found.
         """
         stmt = _build_update_stmt(
             model=model,
@@ -485,18 +483,17 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
         """
-        Adds multiple rows to the database.
+        Adds multiple objects to the database.
 
         Args:
-            model: The model class.
-            values: The values to add.
-            flush: Whether to flush the session.
-            commit: Whether to commit the session.
+            model: The model class representing the table.
+            values: A list of dictionaries containing column-value pairs for each object.
+            flush: Whether to flush the session after adding the objects.
+            commit: Whether to commit the session after adding the objects.
             session: The session to use.
 
         Returns:
-            The added rows.
-
+            A sequence of added objects.
         """
         stmt = _build_insert_stmt(model=model)
 
@@ -523,19 +520,19 @@ class AsyncRepository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
-    ) -> Optional[_T]:
+    ) -> _T:
         """
-        Adds a single row to the database.
+        Adds a single object to the database.
 
         Args:
-            model: The model class.
-            values: The values to add.
-            flush: Whether to flush the session.
-            commit: Whether to commit the session.
+            model: The model class representing the table.
+            values: A dictionary of column-value pairs for the object.
+            flush: Whether to flush the session after adding the object.
+            commit: Whether to commit the session after adding the object.
             session: The session to use.
 
         Returns:
-            The added row.
+            The added object.
 
         """
         stmt = _build_insert_stmt(model=model)
@@ -564,18 +561,17 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> bool:
         """
-        Deletes multiple rows from the database.
+        Deletes multiple objects from the database.
 
         Args:
-            model: The model class.
+            model: The model class representing the table.
             filters: The filters to apply.
-            flush: Whether to flush the session.
-            commit: Whether to commit the session.
+            flush: Whether to flush the session after the deletion.
+            commit: Whether to commit the session after the deletion.
             session: The session to use.
 
         Returns:
-            True if the rows were deleted successfully, False otherwise.
-
+            True if any objects were deleted, False otherwise.
         """
         stmt = _build_delete_stmt(
             model=model,
@@ -606,18 +602,17 @@ class AsyncRepository:
         session: Optional[AsyncSession] = None,
     ) -> bool:
         """
-        Deletes a single row from the database.
+        Deletes a single object from the database.
 
         Args:
-            model: The model class.
+            model: The model class representing the table.
             filters: The filters to apply.
-            flush: Whether to flush the session.
-            commit: Whether to commit the session.
+            flush: Whether to flush the session after the deletion.
+            commit: Whether to commit the session after the deletion.
             session: The session to use.
 
         Returns:
-            True if the row was deleted successfully, False otherwise.
-
+            True if the object was deleted, False otherwise.
         """
         stmt = _build_delete_stmt(
             model=model,

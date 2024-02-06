@@ -51,9 +51,9 @@ class Database:
         views: Get the list of views in the database.
         ini: Get the 'ini' property from the database configuration.
         init_database_dir_json: Get the 'init_database_dir_json' property from the database configuration.
-        _pre_process_data_for_initialization(): Pre-processes the data for initialization.
-        _get_pre_process_data_for_initialization(): Gets the pre-processed data for initialization.
-        _get_ordered_tables(): Gets the ordered tables based on the given table names.
+        _pre_process_data_for_initialization: Pre-processes the data for initialization.
+        _get_pre_process_data_for_initialization: Gets the pre-processed data for initialization.
+        _get_ordered_tables: Gets the ordered tables based on the given table names.
     """
 
     def __init__(

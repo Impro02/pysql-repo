@@ -47,13 +47,13 @@ class Repository:
         _session_factory: The session factory used for creating sessions.
 
     Methods:
-        session_manager(): Returns the session factory.
-        _select(): Selects a single row from the database.
-        _select_stmt(): Selects a single row from the database using a custom statement.
-        _select_all(): Selects all rows from the database.
-        _select_all_stmt(): Selects all rows from the database using a custom statement.
-        _select_paginate(): Selects a paginated set of rows from the database.
-        _select_paginate_stmt(): Selects a paginated set of rows from the database using a custom statement.
+        session_manager: Returns the session factory.
+        _select: Selects a single row from the database.
+        _select_stmt: Selects a single row from the database using a custom statement.
+        _select_all: Selects all rows from the database.
+        _select_all_stmt: Selects all rows from the database using a custom statement.
+        _select_paginate: Selects a paginated set of rows from the database.
+        _select_paginate_stmt: Selects a paginated set of rows from the database using a custom statement.
     """
 
     def __init__(
@@ -61,10 +61,14 @@ class Repository:
         session_factory: Callable[..., AbstractContextManager[Session]],
     ) -> None:
         """
-        Initialize a Repository object.
+        Initializes the Repository.
 
         Args:
-            session_factory: A callable that returns a context manager for a database session.
+            session_factory: A callable that returns a context manager
+                             for creating and managing database sessions.
+
+        Returns:
+            None
         """
         self._session_factory = session_factory
 
@@ -90,15 +94,15 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Optional[_T]:
         """
-        Select a single object from the database.
+        Selects a single object from the database.
 
         Args:
             model: The model class representing the table.
-            distinct: Optional distinct column expression.
-            filters: Optional filters to apply to the query.
-            optional_filters: Optional filters to apply conditionally.
-            relationship_options: Optional relationship options.
-            session: Optional database session.
+            distinct: The distinct column expression.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            session: The session to use.
 
         Returns:
             The selected object or None if not found.
@@ -129,15 +133,15 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Optional[_T]:
         """
-        Select a single object from the database using a pre-built statement.
+        Selects a single object from the database using a custom statement.
 
         Args:
-            stmt: The pre-built SQL statement.
-            filters: Optional filters to apply to the query.
-            optional_filters: Optional filters to apply conditionally.
-            relationship_options: Optional relationship options.
-            group_by: Optional column expression to group by.
-            session: Optional database session.
+            stmt: The custom select statement.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            group_by: The column expression to group by.
+            session: The session to use.
 
         Returns:
             The selected object or None if not found.
@@ -168,18 +172,18 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
         """
-        Select all objects from the database.
+        Selects all objects from the database.
 
         Args:
             model: The model class representing the table.
-            distinct: Optional list of distinct column expressions.
-            filters: Optional filters to apply to the query.
-            optional_filters: Optional filters to apply conditionally.
-            relationship_options: Optional relationship options.
-            order_by: Optional column(s) to order the results by.
-            direction: Optional direction of the ordering.
-            limit: Optional limit on the number of results.
-            session: Optional database session.
+            distinct: The distinct column expressions.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of objects to return.
+            session: The session to use.
 
         Returns:
             A sequence of selected objects.
@@ -218,19 +222,19 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
         """
-        Select all objects from the database using a pre-built statement.
+        Selects all objects from the database using a custom statement.
 
         Args:
-            stmt: The pre-built SQL statement.
+            stmt: The custom select statement.
             model: The model class representing the table.
-            filters: Optional filters to apply to the query.
-            optional_filters: Optional filters to apply conditionally.
-            relationship_options: Optional relationship options.
-            group_by: Optional column expression to group by.
-            order_by: Optional column(s) to order the results by.
-            direction: Optional direction of the ordering.
-            limit: Optional limit on the number of results.
-            session: Optional database session.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            group_by: The column expression to group by.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of rows to return.
+            session: The session to use.
 
         Returns:
             A sequence of selected objects.
@@ -267,20 +271,20 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Tuple[Sequence[_T], str]:
         """
-        Select objects from the database with pagination.
+        Selects a paginated set of objects from the database.
 
         Args:
             model: The model class representing the table.
             page: The page number.
             per_page: The number of items per page.
-            distinct: Optional distinct column expression.
-            filters: Optional filters to apply to the query.
-            optional_filters: Optional filters to apply conditionally.
-            relationship_options: Optional relationship options.
-            order_by: Optional column(s) to order the results by.
-            direction: Optional direction of the ordering.
-            limit: Optional limit on the number of results.
-            session: Optional database session.
+            distinct: The distinct column expression.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of objects to return.
+            session: The session to use.
 
         Returns:
             A tuple containing the selected objects and pagination information.
@@ -323,21 +327,21 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Tuple[Sequence[_T], str]:
         """
-        Select objects from the database with pagination using a pre-built statement.
+        Selects a paginated set of rows from the database using a custom statement.
 
         Args:
-            stmt: The pre-built SQL statement.
+            stmt: The custom select statement.
             model: The model class representing the table.
             page: The page number.
             per_page: The number of items per page.
-            filters: Optional filters to apply to the query.
-            optional_filters: Optional filters to apply conditionally.
-            relationship_options: Optional relationship options.
-            group_by: Optional column expression to group by.
-            order_by: Optional column(s) to order the results by.
-            direction: Optional direction of the ordering.
-            limit: Optional limit on the number of results.
-            session: Optional database session.
+            filters: The filters to apply.
+            optional_filters: The optional filters to apply.
+            relationship_options: The relationship options.
+            group_by: The column expression to group by.
+            order_by: The column(s) to order by.
+            direction: The direction of the ordering.
+            limit: The maximum number of rows to return.
+            session: The session to use.
 
         Returns:
             A tuple containing the selected objects and pagination information.
@@ -375,27 +379,19 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
         """
-        Update multiple objects in the database.
+        Updates multiple objects in the database.
 
         Args:
             model: The model class representing the table.
             values: A dictionary of column-value pairs to update.
-            filters: Optional filters to apply to the query.
+            filters: The filters to apply.
             flush: Whether to flush the session after the update.
             commit: Whether to commit the session after the update.
-            session: Optional database session.
+            session: The session to use.
 
         Returns:
             A sequence of updated objects.
         """
-        if (
-            values is None
-            or not isinstance(values, dict)
-            or len(values) == 0
-            or any([not isinstance(item, str) for item in values.keys()])
-        ):
-            raise TypeError("values expected to be Dict[str, Any]")
-
         stmt = _build_update_stmt(
             model=model,
             values=values,
@@ -425,15 +421,15 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Optional[_T]:
         """
-        Update a single object in the database.
+        Updates a single object in the database.
 
         Args:
             model: The model class representing the table.
             values: A dictionary of column-value pairs to update.
-            filters: Optional filters to apply to the query.
+            filters: The filters to apply.
             flush: Whether to flush the session after the update.
             commit: Whether to commit the session after the update.
-            session: Optional database session.
+            session: The session to use.
 
         Returns:
             The updated object or None if not found.
@@ -469,14 +465,14 @@ class Repository:
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
         """
-        Add multiple objects to the database.
+        Adds multiple objects to the database.
 
         Args:
             model: The model class representing the table.
             values: A list of dictionaries containing column-value pairs for each object.
             flush: Whether to flush the session after adding the objects.
             commit: Whether to commit the session after adding the objects.
-            session: Optional database session.
+            session: The session to use.
 
         Returns:
             A sequence of added objects.
@@ -504,16 +500,16 @@ class Repository:
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
-    ) -> Optional[_T]:
+    ) -> _T:
         """
-        Add a single object to the database.
+        Adds a single object to the database.
 
         Args:
             model: The model class representing the table.
             values: A dictionary of column-value pairs for the object.
             flush: Whether to flush the session after adding the object.
             commit: Whether to commit the session after adding the object.
-            session: Optional database session.
+            session: The session to use.
 
         Returns:
             The added object.
@@ -542,14 +538,14 @@ class Repository:
         session: Optional[Session] = None,
     ) -> bool:
         """
-        Delete multiple objects from the database.
+        Deletes multiple objects from the database.
 
         Args:
             model: The model class representing the table.
-            filters: Optional filters to apply to the query.
+            filters: The filters to apply.
             flush: Whether to flush the session after the deletion.
             commit: Whether to commit the session after the deletion.
-            session: Optional database session.
+            session: The session to use.
 
         Returns:
             True if any objects were deleted, False otherwise.
@@ -581,14 +577,14 @@ class Repository:
         session: Optional[Session] = None,
     ) -> bool:
         """
-        Delete a single object from the database.
+        Deletes a single object from the database.
 
         Args:
             model: The model class representing the table.
-            filters: Optional filters to apply to the query.
+            filters: The filters to apply.
             flush: Whether to flush the session after the deletion.
             commit: Whether to commit the session after the deletion.
-            session: Optional database session.
+            session: The session to use.
 
         Returns:
             True if the object was deleted, False otherwise.
