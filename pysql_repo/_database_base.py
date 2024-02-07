@@ -37,7 +37,7 @@ class DataBaseConfigTypedDict(TypedDict):
     connect_args: Optional[Dict]
 
 
-class Database:
+class DataBase:
     """
     Represents a database object.
 

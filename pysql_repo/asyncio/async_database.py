@@ -18,12 +18,12 @@ from contextlib import asynccontextmanager
 
 # UTILS
 from pysql_repo._database_base import (
-    Database as _Database,
+    DataBase as _DataBase,
     DataBaseConfigTypedDict as _DataBaseConfigTypedDict,
 )
 
 
-class AsyncDatabase(_Database):
+class AsyncDataBase(_DataBase):
     """
     Represents an asynchronous database.
 
