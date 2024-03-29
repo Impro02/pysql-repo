@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest import IsolatedAsyncioTestCase as _IsolatedAsyncioTestCase
 
 # DATABASE
-from pysql_repo.asyncio.async_database import AsyncDatabase
+from pysql_repo.asyncio.async_database import AsyncDataBase
 
 # TESTS
 from tests.models.database.database import Address, Base, City, User
@@ -21,7 +21,7 @@ class IsolatedAsyncioTestCase(_IsolatedAsyncioTestCase):
         Path(os.path.expanduser("~")) / "fastapi" / "pysql-repo" / "back" / "src"
     )
 
-    _database = AsyncDatabase(
+    _database = AsyncDataBase(
         databases_config={
             "connection_string": f"sqlite+aiosqlite:///{_database_path}/tests.db",
             "ini": True,

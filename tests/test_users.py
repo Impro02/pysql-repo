@@ -11,7 +11,8 @@ class TestUsers(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
     def test_get_all(self, expected_data, saved_path):
         # WHEN
-        users = self._user_service.get_users()
+        with self._user_service.session_manager() as session:
+            users = self._user_service.get_users(session=session)
         users_dict = [item.model_dump() for item in users]
 
         save_json_file(saved_path, users_dict)

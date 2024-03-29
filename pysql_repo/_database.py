@@ -13,12 +13,12 @@ from contextlib import contextmanager
 
 # UTILS
 from pysql_repo._database_base import (
-    Database as _Database,
+    DataBase as _DataBase,
     DataBaseConfigTypedDict as _DataBaseConfigTypedDict,
 )
 
 
-class DataBase(_Database):
+class DataBase(_DataBase):
     """
     Represents a database connection and provides methods for database operations.
 
@@ -148,7 +148,7 @@ class DataBase(_Database):
                     timezone=timezone,
                 )
 
-                if raw_data is None:
+                if raw_data is None or len(raw_data) == 0:
                     continue
 
                 session.execute(table.delete())
