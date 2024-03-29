@@ -148,7 +148,7 @@ class DataBase(_DataBase):
                     timezone=timezone,
                 )
 
-                if raw_data is None:
+                if raw_data is None or len(raw_data) == 0:
                     continue
 
                 session.execute(table.delete())
