@@ -148,11 +148,13 @@ class DataBase(_DataBase):
                     timezone=timezone,
                 )
 
-                if raw_data is None or len(raw_data) == 0:
+                if raw_data is None:
                     continue
 
                 session.execute(table.delete())
-                session.execute(table.insert().values(raw_data))
+
+                if len(raw_data) > 0:
+                    session.execute(table.insert().values(raw_data))
 
                 self._logger.info(
                     f"Successfully initialized {table_name=} from the file at {str(path)}."
