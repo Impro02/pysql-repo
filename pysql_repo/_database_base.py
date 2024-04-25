@@ -11,13 +11,8 @@ from sqlalchemy import Table, MetaData
 from sqlalchemy.orm import DeclarativeMeta
 from sqlalchemy.schema import sort_tables
 
-
 # LIBS
 from pysql_repo.libs.file_lib import open_json_file
-
-
-from typing import Optional, Dict
-from typing_extensions import TypedDict
 
 
 class DataBaseConfigTypedDict(TypedDict):

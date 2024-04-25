@@ -23,8 +23,8 @@ class CityService(Service[CityRepository]):
     ) -> None:
         super().__init__(
             repository=city_repository,
-            logger=logger,
         )
+        self._logger = logger
 
     @with_session
     def get_cities(

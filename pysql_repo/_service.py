@@ -1,6 +1,5 @@
 # MODULES
 from typing import TypeVar, Generic
-from logging import Logger
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager
@@ -21,7 +20,6 @@ class Service(Generic[_T]):
 
     Attributes:
         _repository: The repository object.
-        _logger: The logger object.
 
     Methods:
         session_manager: Returns the session factory.
@@ -30,18 +28,15 @@ class Service(Generic[_T]):
     def __init__(
         self,
         repository: _T,
-        logger: Logger,
     ) -> None:
         """
         Initializes the Service.
 
         Args:
             repository: The repository object.
-            logger: The logger object.
         """
 
         self._repository = repository
-        self._logger = logger
 
     def session_manager(self) -> AbstractContextManager[Session]:
         """

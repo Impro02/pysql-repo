@@ -21,7 +21,6 @@ class AsyncService(Generic[_T]):
 
     Attributes:
         _repository: The repository object.
-        _logger: The logger object.
 
     Methods:
         session_manager: Returns the session factory.
@@ -30,17 +29,14 @@ class AsyncService(Generic[_T]):
     def __init__(
         self,
         repository: _T,
-        logger: Logger,
     ) -> None:
         """
         Initializes the AsyncService.
 
         Args:
             repository: The repository object.
-            logger: The logger object.
         """
         self._repository = repository
-        self._logger = logger
 
     def session_manager(self) -> AbstractAsyncContextManager[AsyncSession]:
         """

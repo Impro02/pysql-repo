@@ -23,8 +23,8 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
     ) -> None:
         super().__init__(
             repository=user_repository,
-            logger=logger,
         )
+        self._logger = logger
 
     @with_async_session()
     async def get_users(

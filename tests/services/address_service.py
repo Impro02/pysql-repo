@@ -23,8 +23,8 @@ class AddressService(Service[AddressRepository]):
     ) -> None:
         super().__init__(
             repository=address_repository,
-            logger=logger,
         )
+        self._logger = logger
 
     @with_session
     def get_addresses(

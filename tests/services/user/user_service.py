@@ -23,8 +23,8 @@ class UserService(Service[UserRepository]):
     ) -> None:
         super().__init__(
             repository=user_repository,
-            logger=logger,
         )
+        self._logger = logger
 
     @with_session()
     def get_users(
