@@ -33,7 +33,6 @@ class IsolatedAsyncioTestCase(_IsolatedAsyncioTestCase):
             ),
         },
         base=Base,
-        logger=LOGGER_DB,
     )
 
     def __init__(self, methodName: str = "runTest") -> None:

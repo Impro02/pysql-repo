@@ -35,7 +35,6 @@ class TestCase(_TestCase):
                 ),
             },
             base=Base,
-            logger=LOGGER_DB,
         )
 
         cls._database.create_database()
