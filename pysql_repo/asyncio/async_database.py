@@ -113,7 +113,7 @@ class AsyncDataBase(_DataBase):
             await conn.run_sync(self._base.metadata.create_all)
 
     @asynccontextmanager
-    async def session_factory(self) -> AsyncGenerator[AsyncSession, Any, None]:
+    async def session_factory(self) -> AsyncGenerator[AsyncSession, Any]:
         """
         Context manager for creating an async session.
 
