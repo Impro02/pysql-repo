@@ -1,7 +1,7 @@
 # MODULES
-from typing import Any, Generator, List, Optional
+import logging
+from typing import Any, AsyncGenerator, List, Optional
 from pathlib import Path
-from logging import Logger
 
 # SQLALCHEMY
 from sqlalchemy import text, MetaData, Connection, Table
@@ -21,6 +21,8 @@ from pysql_repo._database_base import (
     DataBase as _DataBase,
     DataBaseConfigTypedDict as _DataBaseConfigTypedDict,
 )
+
+_logger = logging.getLogger("pysql_repo.async_database")
 
 
 class AsyncDataBase(_DataBase):
@@ -51,7 +53,6 @@ class AsyncDataBase(_DataBase):
     def __init__(
         self,
         databases_config: _DataBaseConfigTypedDict,
-        logger: Logger,
         base: DeclarativeMeta,
         metadata_views: Optional[List[MetaData]] = None,
         autoflush: bool = False,
@@ -70,7 +71,7 @@ class AsyncDataBase(_DataBase):
         Returns:
             None
         """
-        super().__init__(databases_config, logger, base, metadata_views)
+        super().__init__(databases_config, _logger, base, metadata_views)
 
         self._engine = create_async_engine(
             self._database_config.get("connection_string"),
@@ -112,7 +113,7 @@ class AsyncDataBase(_DataBase):
             await conn.run_sync(self._base.metadata.create_all)
 
     @asynccontextmanager
-    async def session_factory(self) -> Generator[AsyncSession, Any, None]:
+    async def session_factory(self) -> AsyncGenerator[AsyncSession, Any, None]:
         """
         Context manager for creating an async session.
 

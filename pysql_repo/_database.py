@@ -1,7 +1,7 @@
 # MODULES
+import logging
 from typing import Any, Generator, List, Optional
 from pathlib import Path
-from logging import Logger
 
 # SQLALCHEMY
 from sqlalchemy import text, MetaData, create_engine, Table
@@ -16,6 +16,8 @@ from pysql_repo._database_base import (
     DataBase as _DataBase,
     DataBaseConfigTypedDict as _DataBaseConfigTypedDict,
 )
+
+_logger = logging.getLogger("pysql_repo.database")
 
 
 class DataBase(_DataBase):
@@ -46,7 +48,6 @@ class DataBase(_DataBase):
     def __init__(
         self,
         databases_config: _DataBaseConfigTypedDict,
-        logger: Logger,
         base: DeclarativeMeta,
         metadata_views: Optional[List[MetaData]] = None,
         autoflush: bool = False,
@@ -62,7 +63,7 @@ class DataBase(_DataBase):
             base (DeclarativeMeta): The base class for the declarative models.
             metadata_views (List[MetaData] | None, optional): A list of metadata views. Defaults to None.
         """
-        super().__init__(databases_config, logger, base, metadata_views)
+        super().__init__(databases_config, _logger, base, metadata_views)
 
         self._engine = create_engine(
             self._database_config.get("connection_string"),
