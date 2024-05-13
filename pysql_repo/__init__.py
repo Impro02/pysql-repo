@@ -10,7 +10,7 @@ from pysql_repo._database import DataBase
 from pysql_repo._decorators import with_session
 from pysql_repo._repository import Repository
 from pysql_repo._service import Service
-from pysql_repo._utils import RelationshipOption
+from pysql_repo._utils import RelationshipOption, FilterType
 from pysql_repo._constants.enum import Operators, LoadingTechnique
 
 

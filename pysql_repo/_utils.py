@@ -11,6 +11,7 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+    TypeAlias,
     Union,
 )
 
@@ -31,7 +32,6 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
     Session,
     noload,
@@ -41,6 +41,7 @@ from sqlalchemy.orm import (
     selectinload,
     raiseload,
     contains_eager,
+    declarative_base,
 )
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
@@ -49,9 +50,14 @@ from sqlalchemy.sql.elements import Null, BinaryExpression
 # Enum
 from pysql_repo._constants.enum import LoadingTechnique, Operators
 
-_FilterType = Dict[Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any]
+FilterType: TypeAlias = Dict[
+    Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any
+]
 
-_T = TypeVar("_T", bound=declarative_base())
+_Base = declarative_base()
+
+
+_T = TypeVar("_T", bound=_Base)
 
 
 @dataclass
@@ -73,15 +79,15 @@ class RelationshipOption:
 def build_select_stmt(
     stmt: Select[Tuple[_T]],
     model: Optional[Type[_T]] = None,
-    filters: Optional[_FilterType] = None,
-    optional_filters: Optional[_FilterType] = None,
+    filters: Optional[FilterType] = None,
+    optional_filters: Optional[FilterType] = None,
     relationship_options: Optional[
         Dict[InstrumentedAttribute, RelationshipOption]
     ] = None,
     group_by: Optional[ColumnExpressionArgument] = None,
     order_by: Optional[Union[List[str], str]] = None,
     direction: Optional[Union[List[str], str]] = None,
-    limit: int = None,
+    limit: Optional[int] = None,
 ) -> Select[Tuple[_T]]:
     """
     Builds and returns a select statement with optional filters, group by, order by, and limit clauses.
@@ -136,7 +142,7 @@ def build_select_stmt(
 def build_update_stmt(
     model: Type[_T],
     values: Dict,
-    filters: Optional[_FilterType] = None,
+    filters: Optional[FilterType] = None,
 ) -> ReturningUpdate[Tuple[_T]]:
     """
     Build and delete an update statement for the given model, values, and filters.
@@ -176,7 +182,7 @@ def build_insert_stmt(
 
 def build_delete_stmt(
     model: Type[_T],
-    filters: _FilterType,
+    filters: FilterType,
 ) -> ReturningDelete[Tuple[_T]]:
     """
     Build and return a delete statement for the given model and filters.
@@ -232,7 +238,7 @@ def apply_group_by(
 def apply_relationship_options(
     stmt: Union[Select[Tuple[_T]], Update],
     relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
-    parents: List[InstrumentedAttribute] = None,
+    parents: Optional[List[InstrumentedAttribute]] = None,
 ) -> Union[Select[Tuple[_T]], Update]:
     """
     Apply relationship options to a SQLAlchemy statement.
@@ -312,7 +318,7 @@ def apply_relationship_options(
 
 def apply_filters(
     stmt: Union[Select[Tuple[_T]], Update],
-    filter_dict: _FilterType,
+    filter_dict: FilterType,
     with_optional: bool = False,
 ) -> Union[Select[Tuple[_T]], Update, Delete]:
     """
@@ -470,7 +476,7 @@ def apply_limit(
 
 
 def get_conditions_from_dict(
-    values: _FilterType,
+    values: FilterType,
     with_optional: bool = False,
 ) -> List[ColumnExpressionArgument]:
     """
@@ -641,7 +647,7 @@ def get_conditions_from_dict(
 
 
 def get_filters(
-    filters: _FilterType,
+    filters: FilterType,
     with_optional: bool = False,
 ) -> List[ColumnExpressionArgument]:
     """

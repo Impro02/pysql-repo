@@ -27,7 +27,7 @@ from pysql_repo.asyncio.async_decorator import with_async_session
 
 # UTILS
 from pysql_repo._utils import (
-    _FilterType,
+    FilterType,
     RelationshipOption,
     async_apply_pagination as _async_apply_pagination,
     build_delete_stmt as _build_delete_stmt,
@@ -88,8 +88,8 @@ class AsyncRepository:
         self,
         model: Type[_T],
         distinct: Optional[ColumnExpressionArgument] = None,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
@@ -127,8 +127,8 @@ class AsyncRepository:
     async def _select_stmt(
         self,
         stmt: Select[Tuple[_T]],
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
@@ -167,13 +167,13 @@ class AsyncRepository:
         self,
         model: Type[_T],
         distinct: Optional[List[ColumnExpressionArgument]] = None,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Sequence[_T]:
@@ -217,8 +217,8 @@ class AsyncRepository:
         self,
         stmt: Select[Tuple[_T]],
         model: Type[_T],
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
@@ -270,13 +270,13 @@ class AsyncRepository:
         page: int,
         per_page: int,
         distinct: Optional[ColumnExpressionArgument] = None,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
@@ -326,14 +326,14 @@ class AsyncRepository:
         model: Type[_T],
         page: int,
         per_page: int,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         group_by: Optional[ColumnExpressionArgument] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
         session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[_T], str]:
@@ -387,7 +387,7 @@ class AsyncRepository:
         self,
         model: Type[_T],
         values: Dict[str, Any],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
@@ -431,7 +431,7 @@ class AsyncRepository:
         self,
         model: Type[_T],
         values: Dict[str, Any],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
@@ -555,7 +555,7 @@ class AsyncRepository:
     async def _delete_all(
         self,
         model: Type[_T],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = True,
         commit: bool = False,
         session: Optional[AsyncSession] = None,
@@ -596,7 +596,7 @@ class AsyncRepository:
     async def _delete(
         self,
         model: Type[_T],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = True,
         commit: bool = False,
         session: Optional[AsyncSession] = None,

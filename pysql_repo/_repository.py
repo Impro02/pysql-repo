@@ -17,15 +17,14 @@ from contextlib import AbstractContextManager
 
 # SQLALCHEMY
 from sqlalchemy import ColumnExpressionArgument, Select
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, InstrumentedAttribute
+from sqlalchemy.orm import Session, InstrumentedAttribute, declarative_base
 
 # DECORATORS
 from pysql_repo._decorators import check_values as _check_values, with_session
 
 # UTILS
 from pysql_repo._utils import (
-    _FilterType,
+    FilterType,
     RelationshipOption,
     build_delete_stmt as _build_delete_stmt,
     build_insert_stmt as _build_insert_stmt,
@@ -86,8 +85,8 @@ class Repository:
         self,
         model: Type[_T],
         distinct: Optional[ColumnExpressionArgument] = None,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
@@ -124,8 +123,8 @@ class Repository:
     def _select_stmt(
         self,
         stmt: Select[Tuple[_T]],
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
@@ -161,13 +160,13 @@ class Repository:
         self,
         model: Type[_T],
         distinct: Optional[List[ColumnExpressionArgument]] = None,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Sequence[_T]:
@@ -210,8 +209,8 @@ class Repository:
         self,
         stmt: Select[Tuple[_T]],
         model: Type[_T],
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
@@ -260,13 +259,13 @@ class Repository:
         page: int,
         per_page: int,
         distinct: Optional[ColumnExpressionArgument] = None,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Tuple[Sequence[_T], str]:
@@ -315,14 +314,14 @@ class Repository:
         model: Type[_T],
         page: int,
         per_page: int,
-        filters: Optional[_FilterType] = None,
-        optional_filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
+        optional_filters: Optional[FilterType] = None,
         relationship_options: Optional[
             Dict[InstrumentedAttribute, RelationshipOption]
         ] = None,
         group_by: Optional[ColumnExpressionArgument] = None,
         order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[str] = None,
+        direction: Optional[Union[List[str], str]] = None,
         limit: int = None,
         session: Optional[Session] = None,
     ) -> Tuple[Sequence[_T], str]:
@@ -373,7 +372,7 @@ class Repository:
         self,
         model: Type[_T],
         values: Dict[str, Any],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
@@ -415,7 +414,7 @@ class Repository:
         self,
         model: Type[_T],
         values: Dict[str, Any],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = False,
         commit: bool = False,
         session: Optional[Session] = None,
@@ -532,7 +531,7 @@ class Repository:
     def _delete_all(
         self,
         model: Type[_T],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = True,
         commit: bool = False,
         session: Optional[Session] = None,
@@ -571,7 +570,7 @@ class Repository:
     def _delete(
         self,
         model: Type[_T],
-        filters: Optional[_FilterType] = None,
+        filters: Optional[FilterType] = None,
         flush: bool = True,
         commit: bool = False,
         session: Optional[Session] = None,
