@@ -1,8 +1,8 @@
 # MODULES
-from ast import Delete
 from dataclasses import dataclass, field
 import json
 from typing import (
+    cast,
     Any,
     Dict,
     Iterable,
@@ -18,7 +18,9 @@ from typing import (
 # SQLALCHEMY
 from sqlalchemy import (
     ColumnExpressionArgument,
+    Delete,
     Select,
+    UnaryExpression,
     Update,
     and_,
     asc,
@@ -33,6 +35,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import (
+    DeclarativeBase,
     Session,
     noload,
     lazyload,
@@ -41,9 +44,9 @@ from sqlalchemy.orm import (
     selectinload,
     raiseload,
     contains_eager,
-    declarative_base,
 )
 from sqlalchemy.orm.attributes import InstrumentedAttribute
+from sqlalchemy.orm.strategy_options import _AbstractLoad
 from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
 from sqlalchemy.sql.elements import Null, BinaryExpression
 
@@ -51,13 +54,16 @@ from sqlalchemy.sql.elements import Null, BinaryExpression
 from pysql_repo._constants.enum import LoadingTechnique, Operators
 
 FilterType: TypeAlias = Dict[
-    Union[InstrumentedAttribute, Tuple[InstrumentedAttribute]], Any
+    Union[InstrumentedAttribute[Any], Tuple[InstrumentedAttribute[Any]]], Any
 ]
 
-_Base = declarative_base()
+_T = TypeVar("_T", bound=DeclarativeBase)
 
+_T_SELECT_UPDATE = TypeVar("_T_SELECT_UPDATE", bound=Union[Select[Any], Update])
 
-_T = TypeVar("_T", bound=_Base)
+_T_SELECT_UPDATE_DELETE = TypeVar(
+    "_T_SELECT_UPDATE_DELETE", bound=Union[Select[Any], Update, Delete]
+)
 
 
 @dataclass
@@ -72,19 +78,21 @@ class RelationshipOption:
     """
 
     lazy: LoadingTechnique
-    added_criteria: Optional[BinaryExpression] = field(default=None)
-    children: Dict[InstrumentedAttribute, "RelationshipOption"] = field(default=None)
+    added_criteria: Optional[BinaryExpression[Any]] = field(default=None)
+    children: Optional[Dict[InstrumentedAttribute[Any], "RelationshipOption"]] = field(
+        default=None
+    )
 
 
 def build_select_stmt(
-    stmt: Select[Tuple[_T]],
+    stmt: Select[Any],
     model: Optional[Type[_T]] = None,
     filters: Optional[FilterType] = None,
     optional_filters: Optional[FilterType] = None,
     relationship_options: Optional[
-        Dict[InstrumentedAttribute, RelationshipOption]
+        Dict[InstrumentedAttribute[Any], RelationshipOption]
     ] = None,
-    group_by: Optional[ColumnExpressionArgument] = None,
+    group_by: Optional[ColumnExpressionArgument[Any]] = None,
     order_by: Optional[Union[List[str], str]] = None,
     direction: Optional[Union[List[str], str]] = None,
     limit: Optional[int] = None,
@@ -126,12 +134,13 @@ def build_select_stmt(
         group_by=group_by,
     )
 
-    stmt = apply_order_by(
-        stmt=stmt,
-        model=model,
-        order_by=order_by,
-        direction=direction,
-    )
+    if model is not None:
+        stmt = apply_order_by(
+            stmt=stmt,
+            model=model,
+            order_by=order_by,
+            direction=direction,
+        )
 
     return apply_limit(
         stmt=stmt,
@@ -141,7 +150,7 @@ def build_select_stmt(
 
 def build_update_stmt(
     model: Type[_T],
-    values: Dict,
+    values: Dict[Any, Any],
     filters: Optional[FilterType] = None,
 ) -> ReturningUpdate[Tuple[_T]]:
     """
@@ -202,7 +211,7 @@ def build_delete_stmt(
 
 def select_distinct(
     model: Type[_T],
-    expr: ColumnExpressionArgument,
+    expr: Optional[ColumnExpressionArgument[Any]] = None,
 ) -> Select[Tuple[_T]]:
     """
     Selects distinct values from a column expression.
@@ -220,7 +229,7 @@ def select_distinct(
 
 def apply_group_by(
     stmt: Select[Tuple[_T]],
-    group_by: ColumnExpressionArgument,
+    group_by: Optional[ColumnExpressionArgument[Any]] = None,
 ) -> Select[Tuple[_T]]:
     """
     Apply the GROUP BY clause to the given SQL statement.
@@ -236,27 +245,29 @@ def apply_group_by(
 
 
 def apply_relationship_options(
-    stmt: Union[Select[Tuple[_T]], Update],
-    relationship_options: Dict[InstrumentedAttribute, RelationshipOption],
-    parents: Optional[List[InstrumentedAttribute]] = None,
-) -> Union[Select[Tuple[_T]], Update]:
+    stmt: _T_SELECT_UPDATE,
+    relationship_options: Optional[
+        Dict[InstrumentedAttribute[Any], RelationshipOption]
+    ] = None,
+    parents: Optional[List[InstrumentedAttribute[Any]]] = None,
+) -> _T_SELECT_UPDATE:
     """
     Apply relationship options to a SQLAlchemy statement.
 
     Args:
-        stmt (Union[Select[Tuple[_T]], Update]): The SQLAlchemy statement to apply the relationship options to.
+        stmt (_T_SELECT_UPDATE): The SQLAlchemy statement to apply the relationship options to.
         relationship_options (Dict[InstrumentedAttribute, RelationshipOption]): A dictionary of relationship options.
         parents (List[InstrumentedAttribute], optional): The list of parent relationships. Defaults to None.
 
     Returns:
-        Union[Select[Tuple[_T]], Update]: The modified SQLAlchemy statement with the applied relationship options.
+        _T_SELECT_UPDATE: The modified SQLAlchemy statement with the applied relationship options.
     """
 
     def get_load(
         loading_technique: LoadingTechnique,
-        items: List[InstrumentedAttribute],
-        extra_conditions: Optional[BinaryExpression] = None,
-    ):
+        items: List[InstrumentedAttribute[Any]],
+        extra_conditions: Optional[BinaryExpression[Any]] = None,
+    ) -> _AbstractLoad:
         items_post = []
         for item in items:
             if extra_conditions is not None:
@@ -264,22 +275,21 @@ def apply_relationship_options(
             else:
                 items_post.append(item)
 
-        if loading_technique == LoadingTechnique.CONTAINS_EAGER:
-            return contains_eager(*items_post)
-        elif loading_technique == LoadingTechnique.LAZY:
-            return lazyload(*items_post)
-        elif loading_technique == LoadingTechnique.JOINED:
-            return joinedload(*items_post)
-        elif loading_technique == LoadingTechnique.SUBQUERY:
-            return subqueryload(*items_post)
-        elif loading_technique == LoadingTechnique.SELECTIN:
-            return selectinload(*items_post)
-        elif loading_technique == LoadingTechnique.RAISE:
-            return raiseload(*items_post)
-        elif loading_technique == LoadingTechnique.NOLOAD:
-            return noload(*items_post)
-
-        return None
+        match loading_technique:
+            case LoadingTechnique.CONTAINS_EAGER:
+                return contains_eager(*items_post)
+            case LoadingTechnique.LAZY:
+                return lazyload(*items_post)
+            case LoadingTechnique.JOINED:
+                return joinedload(*items_post)
+            case LoadingTechnique.SUBQUERY:
+                return subqueryload(*items_post)
+            case LoadingTechnique.SELECTIN:
+                return selectinload(*items_post)
+            case LoadingTechnique.RAISE:
+                return raiseload(*items_post)
+            case LoadingTechnique.NOLOAD:
+                return noload(*items_post)
 
     if relationship_options is None:
         return stmt
@@ -304,7 +314,7 @@ def apply_relationship_options(
         )
 
         if load is not None:
-            stmt = stmt.options(load)
+            stmt = cast(_T_SELECT_UPDATE, stmt.options(load))
 
         if (children := sub_relationships.children) is not None:
             stmt = apply_relationship_options(
@@ -317,34 +327,38 @@ def apply_relationship_options(
 
 
 def apply_filters(
-    stmt: Union[Select[Tuple[_T]], Update],
-    filter_dict: FilterType,
+    stmt: _T_SELECT_UPDATE_DELETE,
+    filter_dict: Optional[FilterType] = None,
     with_optional: bool = False,
-) -> Union[Select[Tuple[_T]], Update, Delete]:
+) -> _T_SELECT_UPDATE_DELETE:
     """
     Apply filters to the given statement.
 
     Args:
-        stmt (Union[Select[Tuple[_T]], Update]): The statement to apply filters to.
+        stmt (_T_SELECT_UPDATE_DELETE): The statement to apply filters to.
         filter_dict (_FilterType): The dictionary containing the filters.
         with_optional (bool, optional): Whether to include optional filters. Defaults to False.
 
     Returns:
-        Union[Select[Tuple[_T]], Update, Delete]: The statement with applied filters.
+        _T_SELECT_UPDATE_DELETE: The statement with applied filters.
     """
     filters = get_filters(
         filters=filter_dict,
         with_optional=with_optional,
     )
 
-    return stmt if len(filters) == 0 else stmt.filter(and_(*filters))
+    return (
+        stmt
+        if len(filters) == 0
+        else cast(_T_SELECT_UPDATE_DELETE, stmt.filter(and_(*filters)))
+    )
 
 
 def apply_order_by(
     stmt: Select[Tuple[_T]],
     model: Type[_T],
-    order_by: Union[List[str], str],
-    direction: Union[List[str], str],
+    order_by: Optional[Union[List[str], str]] = None,
+    direction: Optional[Union[List[str], str]] = None,
 ) -> Select[Tuple[_T]]:
     """
     Apply order by clause to the given SQLAlchemy select statement.
@@ -370,7 +384,7 @@ def apply_order_by(
     if len(order_by) != len(direction):
         raise ValueError("order_by length must be equals to direction length")
 
-    order_by_list = []
+    order_by_list: List[UnaryExpression[Any]] = []
     for column, dir in zip(order_by, direction):
         if dir == "desc":
             order_by_list.append(desc(getattr(model, column)))
@@ -381,16 +395,17 @@ def apply_order_by(
 
 
 def apply_pagination(
-    session: Session,
-    stmt: Select[Tuple[_T]],
+    __session__: Session,
+    /,
+    stmt: Select[Any],
     page: int,
     per_page: int,
-) -> Tuple[Select[Tuple[_T]], str]:
+) -> Tuple[Select[Any], str]:
     """
     Apply pagination to a SQLAlchemy select statement.
 
     Args:
-        session (Session): The SQLAlchemy session object.
+        __session__ (Session): The SQLAlchemy session object.
         stmt (Select[Tuple[_T]]): The select statement to apply pagination to.
         page (int): The page number.
         per_page (int): The number of results per page.
@@ -399,28 +414,21 @@ def apply_pagination(
         Tuple[Select[Tuple[_T]], str]: A tuple containing the modified select statement
         with pagination applied, and a JSON string representing the pagination information.
     """
-    if page is None or per_page is None:
-        return stmt, None
+    total_results = __session__.scalar(
+        select(func.count()).select_from(stmt.subquery())
+    )
 
-    total_results = session.scalar(select(func.count()).select_from(stmt))
-    total_pages = (total_results + per_page - 1) // per_page
-
-    pagination = {
-        "total": total_results,
-        "page": page,
-        "per_page": per_page,
-        "total_pages": total_pages,
-    }
-
-    pagination = json.dumps(pagination)
-
-    stmt = stmt.offset((page - 1) * per_page).limit(per_page)
-
-    return stmt, pagination
+    return _apply_pagination(
+        stmt=stmt,
+        total_results=total_results or 0,
+        page=page,
+        per_page=per_page,
+    )
 
 
 async def async_apply_pagination(
-    session: AsyncSession,
+    __session__: AsyncSession,
+    /,
     stmt: Select[Tuple[_T]],
     page: int,
     per_page: int,
@@ -429,7 +437,7 @@ async def async_apply_pagination(
     Apply pagination to a SQLAlchemy select statement asynchronously.
 
     Args:
-        session (AsyncSession): The SQLAlchemy async session.
+        __session__ (AsyncSession): The SQLAlchemy async session.
         stmt (Select[Tuple[_T]]): The select statement to apply pagination to.
         page (int): The page number.
         per_page (int): The number of results per page.
@@ -438,20 +446,32 @@ async def async_apply_pagination(
         Tuple[Select[Tuple[_T]], str]: A tuple containing the modified select statement
         with pagination applied, and a JSON string representing the pagination details.
     """
-    if page is None or per_page is None:
-        return stmt, None
+    total_results = await __session__.scalar(
+        select(func.count()).select_from(stmt.subquery())
+    )
 
-    total_results = await session.scalar(select(func.count()).select_from(stmt))
+    return _apply_pagination(
+        stmt=stmt,
+        total_results=total_results or 0,
+        page=page,
+        per_page=per_page,
+    )
+
+
+def _apply_pagination(
+    stmt: Select[Tuple[_T]], total_results: int, page: int, per_page: int
+) -> Tuple[Select[Tuple[_T]], str]:
+
     total_pages = (total_results + per_page - 1) // per_page
 
-    pagination = {
+    pagination_dict = {
         "total": total_results,
         "page": page,
         "per_page": per_page,
         "total_pages": total_pages,
     }
 
-    pagination = json.dumps(pagination)
+    pagination = json.dumps(pagination_dict)
 
     stmt = stmt.offset((page - 1) * per_page).limit(per_page)
 
@@ -460,7 +480,7 @@ async def async_apply_pagination(
 
 def apply_limit(
     stmt: Select[Tuple[_T]],
-    limit: int,
+    limit: Optional[int] = None,
 ) -> Select[Tuple[_T]]:
     """
     Apply a limit to the given SQL statement.
@@ -478,7 +498,7 @@ def apply_limit(
 def get_conditions_from_dict(
     values: FilterType,
     with_optional: bool = False,
-) -> List[ColumnExpressionArgument]:
+) -> List[ColumnExpressionArgument[Any]]:
     """
     Convert a dictionary of filter conditions into a list of SQLAlchemy conditions.
 
@@ -516,22 +536,26 @@ def get_conditions_from_dict(
                             conditions.append(key != v)
                     case Operators.LIKE:
                         if not isinstance(v, Null):
-                            conditions.append(key.like(v))
+                            if isinstance(key, InstrumentedAttribute):
+                                conditions.append(key.like(v))
                         else:
                             conditions.append(key == v)
                     case Operators.NOT_LIKE:
                         if not isinstance(v, Null):
-                            conditions.append(~key.like(v))
+                            if isinstance(key, InstrumentedAttribute):
+                                conditions.append(~key.like(v))
                         else:
                             conditions.append(key != v)
                     case Operators.ILIKE:
                         if not isinstance(v, Null):
-                            conditions.append(key.ilike(v))
+                            if isinstance(key, InstrumentedAttribute):
+                                conditions.append(key.ilike(v))
                         else:
                             conditions.append(key == v)
                     case Operators.NOT_ILIKE:
                         if not isinstance(v, Null):
-                            conditions.append(~key.ilike(v))
+                            if isinstance(key, InstrumentedAttribute):
+                                conditions.append(~key.ilike(v))
                         else:
                             conditions.append(key != v)
                     case Operators.BETWEEN:
@@ -566,7 +590,7 @@ def get_conditions_from_dict(
                         v = v if isinstance(v, Iterable) else [v]
                         if isinstance(key, tuple):
                             conditions.append(
-                                tuple_([func.lower(key_) for key_ in key]).in_(
+                                tuple_(*(func.lower(key_) for key_ in key)).in_(
                                     [
                                         (
                                             func.lower(v_)
@@ -601,7 +625,7 @@ def get_conditions_from_dict(
                         v = v if isinstance(v, Iterable) else [v]
                         if isinstance(key, tuple):
                             conditions.append(
-                                tuple_([func.lower(key_) for key_ in key]).notin_(
+                                tuple_(*(func.lower(key_) for key_ in key)).notin_(
                                     [
                                         (
                                             func.lower(v_)
@@ -631,7 +655,8 @@ def get_conditions_from_dict(
                             with_optional=with_optional,
                         )
                         for condition in v:
-                            conditions.append(key.has(condition))
+                            if isinstance(key, InstrumentedAttribute):
+                                conditions.append(key.has(condition))
                     case Operators.ANY:
                         v = get_filters(
                             v,
@@ -641,15 +666,16 @@ def get_conditions_from_dict(
                         if len(v) == 0:
                             continue
 
-                        conditions.append(key.any(and_(*v)))
+                        if isinstance(key, InstrumentedAttribute):
+                            conditions.append(key.any(and_(*v)))
 
     return conditions
 
 
 def get_filters(
-    filters: FilterType,
+    filters: Optional[FilterType] = None,
     with_optional: bool = False,
-) -> List[ColumnExpressionArgument]:
+) -> List[ColumnExpressionArgument[Any]]:
     """
     Get the conditions for filtering data based on the given filters.
 
@@ -665,10 +691,8 @@ def get_filters(
     if not isinstance(filters, dict):
         raise TypeError("<filters> must be type of <dict>")
 
-    filters = [{x: y} for x, y in filters.items()]
-
     conditions = []
-    for filter_c in filters:
+    for filter_c in [{x: y} for x, y in filters.items()]:
         if type(filter_c) is not dict:
             continue
 

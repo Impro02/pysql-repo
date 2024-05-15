@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo import Service, with_session
+from pysql_repo import Service
 
 # REPOSITORIES
 from tests.repositories.user.user_repository import UserRepository
@@ -26,19 +26,20 @@ class UserService(Service[UserRepository]):
         )
         self._logger = logger
 
-    @with_session()
     def get_users(
         self,
+        __session__: Session,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -50,9 +51,9 @@ class UserService(Service[UserRepository]):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[Session] = None,
     ) -> List[UserRead]:
         users = self._repository.get_all(
+            __session__,
             ids_in=ids_in,
             ids_not_in=ids_not_in,
             emails_iin=emails_iin,
@@ -74,14 +75,14 @@ class UserService(Service[UserRepository]):
             load_city=load_city,
             order_by=order_by,
             direction=direction,
-            session=session,
         )
 
         return [UserRead.model_validate(item) for item in users]
 
-    @with_session()
     def get_users_paginate(
         self,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -90,10 +91,10 @@ class UserService(Service[UserRepository]):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -105,9 +106,9 @@ class UserService(Service[UserRepository]):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[Session] = None,
     ) -> Tuple[List[UserRead], str]:
         users, pagination = self._repository.get_paginate(
+            __session__,
             page=page,
             per_page=per_page,
             ids_in=ids_in,
@@ -131,22 +132,19 @@ class UserService(Service[UserRepository]):
             load_city=load_city,
             order_by=order_by,
             direction=direction,
-            session=session,
         )
 
-        users = [UserRead.model_validate(item) for item in users]
+        return [UserRead.model_validate(item) for item in users], pagination
 
-        return users, pagination
-
-    @with_session()
     def get_user_by_id(
         self,
+        __session__: Session,
+        /,
         id: int,
-        session: Optional[Session] = None,
-    ) -> UserRead:
+    ) -> Optional[UserRead]:
         user = self._repository.get_by_id(
+            __session__,
             id=id,
-            session=session,
         )
 
         if user is None:
@@ -154,84 +152,84 @@ class UserService(Service[UserRepository]):
 
         return UserRead.model_validate(user)
 
-    @with_session()
     def create_user(
         self,
+        __session__: Session,
+        /,
         data: UserCreate,
-        session: Optional[Session] = None,
     ) -> UserRead:
         user = self._repository.create(
+            __session__,
             data=data,
             flush=True,
-            session=session,
         )
 
         return UserRead.model_validate(user)
 
-    @with_session()
     def create_users(
         self,
+        __session__: Session,
+        /,
         data: List[UserCreate],
-        session: Optional[Session] = None,
     ) -> List[UserRead]:
         users = self._repository.create_all(
+            __session__,
             data=data,
             flush=True,
-            session=session,
         )
 
         return [UserRead.model_validate(user) for user in users]
 
-    @with_session()
     def patch_email(
         self,
+        __session__: Session,
+        /,
         id: int,
         email: str,
-        session: Optional[Session] = None,
     ) -> UserRead:
         user = self._repository.patch_email(
+            __session__,
             id=id,
             email=email,
             flush=True,
-            session=session,
         )
 
         return UserRead.model_validate(user)
 
-    @with_session()
     def patch_disable(
         self,
+        __session__: Session,
+        /,
         ids: List[int],
-        session: Optional[Session] = None,
     ) -> List[UserRead]:
         users = self._repository.patch_disable(
+            __session__,
             ids=ids,
             flush=True,
-            session=session,
         )
 
         return [UserRead.model_validate(user) for user in users]
 
-    @with_session()
     def delete_by_id(
         self,
+        __session__: Session,
+        /,
         id: int,
-        session: Optional[Session] = None,
     ) -> bool:
         return self._repository.delete(
+            __session__,
             id=id,
             flush=True,
-            session=session,
         )
 
-    @with_session()
     def delete_by_ids(
         self,
+        __session__: Session,
+        /,
         ids: List[int],
-        session: Optional[Session] = None,
     ) -> bool:
         return self._repository.delete_all(
+            __session__,
             ids=ids,
             flush=True,
-            session=session,
         )

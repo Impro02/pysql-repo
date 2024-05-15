@@ -1,11 +1,11 @@
 # MODULES
 import logging
-from typing import Any, AsyncGenerator, List, Optional
+from typing import Any, AsyncGenerator, List, Optional, Type
 from pathlib import Path
 
 # SQLALCHEMY
 from sqlalchemy import text, MetaData, Connection, Table
-from sqlalchemy.orm import DeclarativeMeta
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.inspection import inspect
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -53,7 +53,7 @@ class AsyncDataBase(_DataBase):
     def __init__(
         self,
         databases_config: _DataBaseConfigTypedDict,
-        base: DeclarativeMeta,
+        base: Type[DeclarativeBase],
         metadata_views: Optional[List[MetaData]] = None,
         autoflush: bool = False,
         expire_on_commit: bool = False,
@@ -73,10 +73,12 @@ class AsyncDataBase(_DataBase):
         """
         super().__init__(databases_config, _logger, base, metadata_views)
 
+        assert self._connection_string is not None, "Connection string is required."
+
         self._engine = create_async_engine(
-            self._database_config.get("connection_string"),
+            self._connection_string,
             echo=echo,
-            connect_args=self._database_config.get("connect_args") or {},
+            connect_args=self._connect_args,
         )
 
         self._session_factory = async_sessionmaker(
@@ -96,7 +98,7 @@ class AsyncDataBase(_DataBase):
             Exception: If an error occurs during the database creation process.
         """
 
-        def inspect_view_names(conn: Connection):
+        def inspect_view_names(conn: Connection) -> List[str]:
             inspector = inspect(conn)
 
             return [item.lower() for item in inspector.get_view_names()]
@@ -165,7 +167,9 @@ class AsyncDataBase(_DataBase):
                     continue
 
                 await session.execute(table.delete())
-                await session.execute(table.insert().values(raw_data))
+
+                if len(raw_data) > 0:
+                    await session.execute(table.insert().values(raw_data))
 
                 self._logger.info(
                     f"Successfully initialized {table_name=} from the file at {str(path)}."

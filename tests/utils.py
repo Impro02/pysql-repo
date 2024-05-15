@@ -9,7 +9,7 @@ def create_logger(
     level: int,
     formatter: logging.Formatter,
     stream_output: bool = False,
-):
+) -> logging.Logger:
     logger = logging.getLogger(name=name)
 
     if logger.hasHandlers():
@@ -29,13 +29,6 @@ def create_logger(
 
 FORMATTER = logging.Formatter(
     "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
-
-LOGGER_DB = create_logger(
-    "sqlalchemy.engine",
-    level=logging.INFO,
-    formatter=FORMATTER,
-    stream_output=True,
 )
 
 LOGGER_TESTS = create_logger(

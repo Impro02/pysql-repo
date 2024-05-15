@@ -1,11 +1,17 @@
 # MODULES
-from typing import Any, Dict, List, Union
+import functools
+from typing import Callable, TypeVar, ParamSpec
 
 # SQLALCHEMY
 from sqlalchemy.orm import Session
 
+_P = ParamSpec("_P")
+_T = TypeVar("_T")
 
-def check_values(as_list: bool = False):
+
+def check_values(
+    as_list: bool = False,
+) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]:
     """
     Decorator that checks the validity of the 'values' argument passed to a function.
 
@@ -19,11 +25,11 @@ def check_values(as_list: bool = False):
         function: The decorated function.
     """
 
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            values_attr: Union[Dict[str, Any], List[Dict[str, Any]]] = kwargs.get(
-                "values", None
-            )
+    def decorator(func: Callable[_P, _T]) -> Callable[_P, _T]:
+
+        @functools.wraps(func)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _T:
+            values_attr = kwargs.get("values", None)
 
             if as_list:
                 if (
@@ -50,7 +56,7 @@ def check_values(as_list: bool = False):
                         "values expected to be a non-empty dictionary with string keys"
                     )
 
-            return func(self, *args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
@@ -59,7 +65,7 @@ def check_values(as_list: bool = False):
 
 def with_session(
     param_session: str = "session",
-):
+) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]:
     """
     Decorator that provides a session to the decorated method.
 
@@ -74,8 +80,12 @@ def with_session(
         Callable: The decorated method.
     """
 
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
+    def decorator(func: Callable[_P, _T]) -> Callable[_P, _T]:
+
+        @functools.wraps(func)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _T:
+            self = kwargs.get("self")
+
             if not isinstance(self, (Repository, Service)):
                 raise TypeError(
                     f"{self.__class__.__name__} must be instance of {Repository.__name__} or {Service.__name__}"
@@ -86,13 +96,13 @@ def with_session(
             if session is None:
                 with self.session_manager() as session:
                     kwargs[param_session] = session
-                    return func(self, *args, **kwargs)
+                    return func(*args, **kwargs)
             elif not isinstance(session, Session):
                 raise TypeError(
                     f"{param_session} must be instance of {Session.__name__}"
                 )
 
-            return func(self, *args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 

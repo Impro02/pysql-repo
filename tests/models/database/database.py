@@ -3,10 +3,11 @@ from typing import List
 
 # SQLALCHEMY
 from sqlalchemy import Boolean, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship, Mapped, mapped_column
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class City(Base):

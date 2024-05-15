@@ -1,8 +1,7 @@
 # MODULES
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 # SQLALCHEMY
-from sqlalchemy import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # PYSQL_REPO
@@ -27,16 +26,18 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def get_all(
         self,
+        __session__: AsyncSession,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -48,10 +49,9 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[AsyncSession] = None,
     ) -> Sequence[User]:
         users = await self._select_all(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -86,6 +86,8 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def get_paginate(
         self,
+        __session__: AsyncSession,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -94,10 +96,10 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -109,10 +111,9 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[User], str]:
         users, pagination = await self._select_paginate(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -149,11 +150,12 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def get_by_id(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
-        session: Optional[AsyncSession] = None,
     ) -> Optional[User]:
         user = await self._select(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -166,13 +168,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def create(
         self,
+        __session__: AsyncSession,
+        /,
         data: UserCreate,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> User:
         user = await self._add(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: data.email,
@@ -187,13 +190,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def create_all(
         self,
+        __session__: AsyncSession,
+        /,
         data: List[UserCreate],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> Sequence[User]:
         users = await self._add_all(
-            session=session,
+            __session__,
             model=User,
             values=[
                 {
@@ -211,14 +215,15 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def patch_email(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
         email: str,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
-    ) -> User:
+    ) -> Optional[User]:
         user = await self._update(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: email,
@@ -236,13 +241,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def patch_disable(
         self,
+        __session__: AsyncSession,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
-    ) -> List[User]:
+    ) -> Sequence[User]:
         users = await self._update_all(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.is_active.key: False,
@@ -260,13 +266,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def delete(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> bool:
         is_deleted = await self._delete(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -281,13 +288,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def delete_all(
         self,
+        __session__: AsyncSession,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> bool:
         is_deleted = await self._delete_all(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {

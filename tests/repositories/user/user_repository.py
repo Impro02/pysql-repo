@@ -25,17 +25,18 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def get_all(
         self,
-        session: Session,
+        __session__: Session,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -49,7 +50,7 @@ class UserRepository(Repository, _UserRepositoryBase):
         direction: Optional[List[str]] = None,
     ) -> Sequence[User]:
         users = self._select_all(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -84,7 +85,8 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def get_paginate(
         self,
-        session: Session,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -93,10 +95,10 @@ class UserRepository(Repository, _UserRepositoryBase):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -110,7 +112,7 @@ class UserRepository(Repository, _UserRepositoryBase):
         direction: Optional[List[str]] = None,
     ) -> Tuple[Sequence[User], str]:
         users, pagination = self._select_paginate(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -147,11 +149,11 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def get_by_id(
         self,
-        session: Session,
+        __session__: Session,
         id: int,
     ) -> Optional[User]:
         user = self._select(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -164,13 +166,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def create(
         self,
+        __session__: Session,
+        /,
         data: UserCreate,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> User:
         user = self._add(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: data.email,
@@ -185,13 +188,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def create_all(
         self,
+        __session__: Session,
+        /,
         data: List[UserCreate],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> Sequence[User]:
         users = self._add_all(
-            session=session,
+            __session__,
             model=User,
             values=[
                 {
@@ -209,14 +213,15 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def patch_email(
         self,
+        __session__: Session,
+        /,
         id: int,
         email: str,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
-    ) -> User:
+    ) -> Optional[User]:
         user = self._update(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: email,
@@ -234,13 +239,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def patch_disable(
         self,
+        __session__: Session,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
-    ) -> List[User]:
+    ) -> Sequence[User]:
         users = self._update_all(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.is_active.key: False,
@@ -258,13 +264,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def delete(
         self,
+        __session__: Session,
+        /,
         id: int,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> bool:
         is_deleted = self._delete(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -279,13 +286,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def delete_all(
         self,
+        __session__: Session,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> bool:
         is_deleted = self._delete_all(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {

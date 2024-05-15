@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo import Service, with_session
+from pysql_repo import Service
 
 # REPOSITORIES
 from tests.repositories.address_repository import AddressRepository
@@ -26,9 +26,10 @@ class AddressService(Service[AddressRepository]):
         )
         self._logger = logger
 
-    @with_session
     def get_addresses(
         self,
+        __session__: Session,
+        /,
         ids: Optional[List[int]] = None,
         streets: Optional[List[str]] = None,
         street_like: Optional[str] = None,
@@ -36,9 +37,9 @@ class AddressService(Service[AddressRepository]):
         zip_codes: Optional[List[str]] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
     ) -> List[AddressRead]:
-        cities = self._repository.get_all(
+        addresses = self._repository.get_all(
+            __session__,
             ids=ids,
             streets=streets,
             street_like=street_like,
@@ -46,14 +47,14 @@ class AddressService(Service[AddressRepository]):
             zip_codes=zip_codes,
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
         )
 
-        return [AddressRead.model_validate(item) for item in cities]
+        return [AddressRead.model_validate(item) for item in addresses]
 
-    @with_session
     def get_addresses_paginate(
         self,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids: Optional[List[int]] = None,
@@ -63,9 +64,9 @@ class AddressService(Service[AddressRepository]):
         zip_codes: Optional[List[str]] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
     ) -> Tuple[List[AddressRead], str]:
-        adresses, pagination = self._repository.get_paginate(
+        addresses, pagination = self._repository.get_paginate(
+            __session__,
             page=page,
             per_page=per_page,
             ids=ids,
@@ -75,22 +76,19 @@ class AddressService(Service[AddressRepository]):
             zip_codes=zip_codes,
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
         )
 
-        adresses = [AddressRead.model_validate(item) for item in adresses]
+        return [AddressRead.model_validate(item) for item in addresses], pagination
 
-        return adresses, pagination
-
-    @with_session
     def get_address_by_id(
         self,
+        __session__: Session,
+        /,
         id: int,
-        current_session: Optional[Session] = None,
-    ) -> AddressRead:
+    ) -> Optional[AddressRead]:
         address = self._repository.get_by_id(
+            __session__,
             id=id,
-            current_session=current_session,
         )
 
         if address is None:

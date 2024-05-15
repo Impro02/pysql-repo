@@ -1,12 +1,12 @@
 # MODULES
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, List, Optional, Sequence, Tuple
 
 # SQLALCHEMY
-from sqlalchemy import Column
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
 from pysql_repo import Operators, Repository
+from pysql_repo._utils import FilterType
 
 # CONTEXTLIB
 from contextlib import AbstractContextManager
@@ -31,7 +31,7 @@ class AddressRepository(Repository):
         street: Optional[str] = None,
         zip_codes: Optional[List[str]] = None,
         city: Optional[str] = None,
-    ) -> Dict[Column, Any]:
+    ) -> FilterType:
         return {
             Address.id: {
                 Operators.IN: ids,
@@ -55,6 +55,8 @@ class AddressRepository(Repository):
 
     def get_all(
         self,
+        __session__: Session,
+        /,
         ids: Optional[List[int]] = None,
         streets: Optional[List[str]] = None,
         street_like: Optional[str] = None,
@@ -62,10 +64,9 @@ class AddressRepository(Repository):
         zip_codes: Optional[List[str]] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
-    ) -> List[Address]:
+    ) -> Sequence[Address]:
         addresses = self._select_all(
-            session=current_session,
+            __session__,
             model=Address,
             optional_filters=self.__get_filters(
                 ids=ids,
@@ -82,6 +83,8 @@ class AddressRepository(Repository):
 
     def get_paginate(
         self,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids: Optional[List[int]] = None,
@@ -91,10 +94,9 @@ class AddressRepository(Repository):
         zip_codes: Optional[List[str]] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
-    ) -> Tuple[List[Address], str]:
+    ) -> Tuple[Sequence[Address], str]:
         addresses, pagination = self._select_paginate(
-            session=current_session,
+            __session__,
             model=Address,
             optional_filters=self.__get_filters(
                 ids=ids,
@@ -113,11 +115,12 @@ class AddressRepository(Repository):
 
     def get_by_id(
         self,
+        __session__: Session,
+        /,
         id: int,
-        current_session: Optional[Session] = None,
     ) -> Optional[Address]:
         address = self._select(
-            session=current_session,
+            __session__,
             model=Address,
             filters={
                 Address.id: {

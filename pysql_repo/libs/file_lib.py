@@ -1,7 +1,7 @@
 # MODULES
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, cast
 
 
 from typing import List, Dict, Union
@@ -9,7 +9,9 @@ from pathlib import Path
 import json
 
 
-def open_json_file(path: Path, encoding: str = "utf-8") -> Union[List[Dict], Dict]:
+def open_json_file(
+    path: Path, encoding: str = "utf-8"
+) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
     """
     Opens a JSON file and returns its contents as a Python object.
 
@@ -18,7 +20,7 @@ def open_json_file(path: Path, encoding: str = "utf-8") -> Union[List[Dict], Dic
         encoding (str, optional): The encoding of the file. Defaults to "utf-8".
 
     Returns:
-        Union[List[Dict], Dict]: The contents of the JSON file as a Python object.
+        JSONType: The contents of the JSON file as a Python object.
 
     Raises:
         FileNotFoundError: If the specified path does not exist.
@@ -33,7 +35,7 @@ def open_json_file(path: Path, encoding: str = "utf-8") -> Union[List[Dict], Dic
     with open(path, encoding=encoding) as json_file:
         raw_data = json.load(json_file)
 
-    return raw_data
+    return cast(Union[List[Dict[str, Any]], Dict[str, Any]], raw_data)
 
 
 def open_file(path: Path, encoding: str = "utf-8") -> bytes:
@@ -58,17 +60,17 @@ def open_file(path: Path, encoding: str = "utf-8") -> bytes:
         raise FileExistsError(f"Path {path} is not a file")
 
     with open(path, encoding=encoding) as file:
-        raw_data = file.read()
-        raw_data = raw_data.encode(encoding)
+        data = file.read()
+        encoded_data = data.encode(encoding)
 
-    return raw_data
+    return encoded_data
 
 
 def save_json_file(
     path: Path,
     data: Any,
     encoding: str = "utf-8",
-):
+) -> None:
     """
     Save data as a JSON file at the specified path.
 
@@ -89,7 +91,7 @@ def save_file(
     data: bytes,
     encoding: str = "utf-8",
     new_line: str = "\n",
-):
+) -> None:
     """
     Save the given data to a file at the specified path.
 

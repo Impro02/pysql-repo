@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 # PYSQL_REPO
-from pysql_repo import Service, with_session
+from pysql_repo import Service
 
 # REPOSITORIES
 from tests.repositories.city_repository import CityRepository
@@ -26,43 +26,44 @@ class CityService(Service[CityRepository]):
         )
         self._logger = logger
 
-    @with_session
     def get_cities(
         self,
+        __session__: Session,
+        /,
         ids: Optional[List[int]] = None,
-        names: Optional[List[int]] = None,
+        names: Optional[List[str]] = None,
         name_like: Optional[str] = None,
         name: Optional[str] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
     ) -> List[CityRead]:
         cities = self._repository.get_all(
+            __session__,
             ids=ids,
             names=names,
             name_like=name_like,
             name=name,
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
         )
 
         return [CityRead.model_validate(item) for item in cities]
 
-    @with_session
     def get_cities_paginate(
         self,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids: Optional[List[int]] = None,
-        names: Optional[List[int]] = None,
+        names: Optional[List[str]] = None,
         name_like: Optional[str] = None,
         name: Optional[str] = None,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        current_session: Optional[Session] = None,
     ) -> Tuple[List[CityRead], str]:
         cities, pagination = self._repository.get_paginate(
+            __session__,
             page=page,
             per_page=per_page,
             ids=ids,
@@ -71,22 +72,19 @@ class CityService(Service[CityRepository]):
             name=name,
             order_by=order_by,
             direction=direction,
-            current_session=current_session,
         )
 
-        cities = [CityRead.model_validate(item) for item in cities]
+        return [CityRead.model_validate(item) for item in cities], pagination
 
-        return cities, pagination
-
-    @with_session
     def get_city_by_id(
         self,
+        __session__: Session,
+        /,
         id: int,
-        current_session: Optional[Session] = None,
-    ) -> CityRead:
+    ) -> Optional[CityRead]:
         city = self._repository.get_by_id(
+            __session__,
             id=id,
-            current_session=current_session,
         )
 
         if city is None:

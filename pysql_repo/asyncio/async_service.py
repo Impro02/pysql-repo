@@ -1,6 +1,5 @@
 # MODULES
 from typing import TypeVar, Generic
-from logging import Logger
 
 # CONTEXTLIB
 from contextlib import AbstractAsyncContextManager

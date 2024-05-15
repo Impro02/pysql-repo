@@ -1,21 +1,21 @@
 # MODULES
 import pytz
 import re
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional, Type, TypedDict, Union
 from pathlib import Path
 from datetime import datetime
 from logging import Logger
 
 # SQLALCHEMY
 from sqlalchemy import Table, MetaData
-from sqlalchemy.orm import DeclarativeMeta
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.schema import sort_tables
 
 # LIBS
 from pysql_repo.libs.file_lib import open_json_file
 
 
-class DataBaseConfigTypedDict(TypedDict):
+class DataBaseConfigTypedDict(TypedDict, total=False):
     """
     Represents the configuration options for a database connection.
 
@@ -29,7 +29,7 @@ class DataBaseConfigTypedDict(TypedDict):
     connection_string: str
     ini: bool
     init_database_dir_json: Optional[str]
-    connect_args: Optional[Dict]
+    connect_args: Optional[Dict[str, Any]]
 
 
 class DataBase:
@@ -39,7 +39,7 @@ class DataBase:
     Attributes:
         _database_config (DataBaseConfigTypedDict): The configuration for the databases.
         _logger (Logger): The logger object for logging.
-        _base (DeclarativeMeta): The base class for the database models.
+        _base (DeclarativeBase): The base class for the database models.
         _metadata_views (Optional[List[MetaData]]): The list of metadata views.
 
     Methods:
@@ -55,7 +55,7 @@ class DataBase:
         self,
         databases_config: DataBaseConfigTypedDict,
         logger: Logger,
-        base: DeclarativeMeta,
+        base: Type[DeclarativeBase],
         metadata_views: Optional[List[MetaData]] = None,
     ) -> None:
         """
@@ -68,6 +68,9 @@ class DataBase:
             metadata_views (Optional[List[MetaData]], optional): The list of metadata views. Defaults to None.
         """
         self._database_config = databases_config
+        self._connection_string = self._database_config.get("connection_string")
+        self._connect_args = self._database_config.get("connect_args") or {}
+
         self._logger = logger
         self._base = base
         self._metadata_views = metadata_views
@@ -96,7 +99,7 @@ class DataBase:
         Returns:
             bool: The 'ini' property value.
         """
-        return self._database_config.get("ini")
+        return self._database_config.get("ini", False)
 
     @property
     def init_database_dir_json(self) -> Optional[str]:
@@ -109,7 +112,9 @@ class DataBase:
         return self._database_config.get("init_database_dir_json")
 
     @classmethod
-    def _pre_process_data_for_initialization(cls, data: Dict[str, Any], timezone: str):
+    def _pre_process_data_for_initialization(
+        cls, data: Dict[str, Any], timezone: str
+    ) -> Dict[str, Any]:
         """
         Pre-processes the data for initialization.
 
@@ -139,7 +144,7 @@ class DataBase:
         self,
         path: Path,
         timezone: str,
-    ) -> Optional[List[Dict[str, Any]]]:
+    ) -> Optional[Union[List[Dict[str, Any]], Dict[str, Any]]]:
         """
         Gets the pre-processed data for initialization.
 
@@ -157,15 +162,22 @@ class DataBase:
                 f"Failed to initialize table due to the absence of the file at [{path}]."
             )
 
-            return
+            return None
 
-        return [
-            self._pre_process_data_for_initialization(
-                data,
+        return (
+            [
+                self._pre_process_data_for_initialization(
+                    data,
+                    timezone=timezone,
+                )
+                for data in raw_data
+            ]
+            if isinstance(raw_data, list)
+            else self._pre_process_data_for_initialization(
+                raw_data,
                 timezone=timezone,
             )
-            for data in raw_data
-        ]
+        )
 
     def _get_ordered_tables(self, table_names: List[str]) -> List[Table]:
         """
@@ -185,9 +197,10 @@ class DataBase:
                 f"Unable to init database tables because {init=} in config"
             )
 
-        table_names = table_names or set()
         tables = {
-            k: v for k, v in self._base.metadata.tables.items() if k in table_names
+            k: v
+            for k, v in self._base.metadata.tables.items()
+            if k in table_names or []
         }
 
         return sort_tables(tables.values())

@@ -1,11 +1,11 @@
 # MODULES
 import logging
-from typing import Any, Generator, List, Optional
+from typing import Any, Generator, List, Optional, Type
 from pathlib import Path
 
 # SQLALCHEMY
 from sqlalchemy import text, MetaData, create_engine, Table
-from sqlalchemy.orm import DeclarativeMeta, Session, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.inspection import inspect
 
 # CONTEXTLIB
@@ -28,7 +28,7 @@ class DataBase(_DataBase):
         _database_config (DataBaseConfigTypedDict): The configuration for the databases.
         _engine: (Engine): The engine used for database operations.
         _logger (Logger): An instance of the logger to use for logging.
-        _base (DeclarativeMeta): The base class for the database models.
+        _base (DeclarativeBase): The base class for the database models.
         _metadata_views (Optional[List[MetaData]]): Optional list of metadata views.
         _session_factory (sessionmaker[Session]): The factory for creating sessions.
         _views (List[Table]): The list of metadata views.
@@ -48,7 +48,7 @@ class DataBase(_DataBase):
     def __init__(
         self,
         databases_config: _DataBaseConfigTypedDict,
-        base: DeclarativeMeta,
+        base: Type[DeclarativeBase],
         metadata_views: Optional[List[MetaData]] = None,
         autoflush: bool = False,
         expire_on_commit: bool = False,
@@ -65,10 +65,12 @@ class DataBase(_DataBase):
         """
         super().__init__(databases_config, _logger, base, metadata_views)
 
+        assert self._connection_string is not None, "Connection string is required."
+
         self._engine = create_engine(
-            self._database_config.get("connection_string"),
+            self._connection_string,
             echo=echo,
-            connect_args=self._database_config.get("connect_args") or {},
+            connect_args=self._connect_args,
         )
 
         self._session_factory = sessionmaker(
@@ -122,7 +124,7 @@ class DataBase(_DataBase):
         self,
         directory: Path,
         table_names: List[str],
-        timezone="CET",
+        timezone: str = "CET",
     ) -> List[Table]:
         """
         Initializes tables in the database by inserting data from JSON files.

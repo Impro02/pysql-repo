@@ -1,4 +1,4 @@
-from pysql_repo.asyncio.async_database import AsyncDataBase
-from pysql_repo.asyncio.async_decorator import with_async_session
-from pysql_repo.asyncio.async_repository import AsyncRepository
-from pysql_repo.asyncio.async_service import AsyncService
+from pysql_repo.asyncio.async_database import AsyncDataBase as AsyncDataBase
+from pysql_repo.asyncio.async_decorator import with_async_session as with_async_session
+from pysql_repo.asyncio.async_repository import AsyncRepository as AsyncRepository
+from pysql_repo.asyncio.async_service import AsyncService as AsyncService
