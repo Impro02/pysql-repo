@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-version = "0.7.2"
+version = "0.7.3"
 
 with open("requirements.txt") as f:
     required_packages = f.read().splitlines()
@@ -8,12 +8,7 @@ with open("requirements.txt") as f:
 setup(
     name="pysql-repo",
     version=version,
-    packages=[
-        "pysql_repo",
-        "pysql_repo._constants",
-        "pysql_repo.asyncio",
-        "pysql_repo.libs",
-    ],
+    packages=find_packages(),
     install_requires=required_packages,
     license="MIT",
     author="Maxime MARTIN",
