@@ -1,32 +1,38 @@
 # MODULES
 from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-    Sequence,
+    Any as _Any,
+    Callable as _Callable,
+    Dict as _Dict,
+    List as _List,
+    Optional as _Optional,
+    Tuple as _Tuple,
+    Type as _Type,
+    TypeVar as _TypeVar,
+    Union as _Union,
+    Sequence as _Sequence,
 )
 
 # CONTEXTLIB
-from contextlib import AbstractAsyncContextManager
+from contextlib import AbstractAsyncContextManager as _AbstractAsyncContextManager
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, Select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute
+from sqlalchemy import (
+    ColumnExpressionArgument as _ColumnExpressionArgument,
+    Select as _Select,
+)
+from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
+from sqlalchemy.orm import (
+    DeclarativeBase as _DeclarativeBase,
+    InstrumentedAttribute as _InstrumentedAttribute,
+)
 
 # DECORATORS
 from pysql_repo._decorators import check_values as _check_values
 
 # UTILS
 from pysql_repo._utils import (
-    FilterType,
-    RelationshipOption,
+    FilterType as _FilterType,
+    RelationshipOption as _RelationshipOption,
     async_apply_pagination as _async_apply_pagination,
     build_delete_stmt as _build_delete_stmt,
     build_insert_stmt as _build_insert_stmt,
@@ -36,7 +42,7 @@ from pysql_repo._utils import (
 )
 
 
-_T = TypeVar("_T", bound=DeclarativeBase)
+_T = _TypeVar("_T", bound=_DeclarativeBase)
 
 
 class AsyncRepository:
@@ -58,7 +64,7 @@ class AsyncRepository:
 
     def __init__(
         self,
-        session_factory: Callable[..., AbstractAsyncContextManager[AsyncSession]],
+        session_factory: _Callable[..., _AbstractAsyncContextManager[_AsyncSession]],
     ) -> None:
         """
         Initializes the AsyncRepository.
@@ -72,7 +78,7 @@ class AsyncRepository:
         """
         self._session_factory = session_factory
 
-    def session_manager(self) -> AbstractAsyncContextManager[AsyncSession]:
+    def session_manager(self) -> _AbstractAsyncContextManager[_AsyncSession]:
         """
         Get a session manager.
 
@@ -83,16 +89,16 @@ class AsyncRepository:
 
     async def _select(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        distinct: Optional[ColumnExpressionArgument[Any]] = None,
-        filters: Optional[FilterType] = None,
-        optional_filters: Optional[FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute[Any], RelationshipOption]
+        model: _Type[_T],
+        distinct: _Optional[_ColumnExpressionArgument[_Any]] = None,
+        filters: _Optional[_FilterType] = None,
+        optional_filters: _Optional[_FilterType] = None,
+        relationship_options: _Optional[
+            _Dict[_InstrumentedAttribute[_Any], _RelationshipOption]
         ] = None,
-    ) -> Optional[_T]:
+    ) -> _Optional[_T]:
         """
         Selects a single object from the database.
 
@@ -123,16 +129,16 @@ class AsyncRepository:
 
     async def _select_stmt(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        stmt: Select[Tuple[_T]],
-        filters: Optional[FilterType] = None,
-        optional_filters: Optional[FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute[Any], RelationshipOption]
+        stmt: _Select[_Tuple[_T]],
+        filters: _Optional[_FilterType] = None,
+        optional_filters: _Optional[_FilterType] = None,
+        relationship_options: _Optional[
+            _Dict[_InstrumentedAttribute[_Any], _RelationshipOption]
         ] = None,
-        group_by: Optional[ColumnExpressionArgument[Any]] = None,
-    ) -> Optional[_T]:
+        group_by: _Optional[_ColumnExpressionArgument[_Any]] = None,
+    ) -> _Optional[_T]:
         """
         Selects a single object from the database using a custom statement.
 
@@ -162,19 +168,19 @@ class AsyncRepository:
 
     async def _select_all(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        distinct: Optional[ColumnExpressionArgument[Any]] = None,
-        filters: Optional[FilterType] = None,
-        optional_filters: Optional[FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute[Any], RelationshipOption]
+        model: _Type[_T],
+        distinct: _Optional[_ColumnExpressionArgument[_Any]] = None,
+        filters: _Optional[_FilterType] = None,
+        optional_filters: _Optional[_FilterType] = None,
+        relationship_options: _Optional[
+            _Dict[_InstrumentedAttribute[_Any], _RelationshipOption]
         ] = None,
-        order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[Union[List[str], str]] = None,
-        limit: Optional[int] = None,
-    ) -> Sequence[_T]:
+        order_by: _Optional[_Union[_List[str], str]] = None,
+        direction: _Optional[_Union[_List[str], str]] = None,
+        limit: _Optional[int] = None,
+    ) -> _Sequence[_T]:
         """
         Selects all objects from the database.
 
@@ -212,20 +218,20 @@ class AsyncRepository:
 
     async def _select_all_stmt(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        stmt: Select[Tuple[_T]],
-        model: Type[_T],
-        filters: Optional[FilterType] = None,
-        optional_filters: Optional[FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute[Any], RelationshipOption]
+        stmt: _Select[_Tuple[_T]],
+        model: _Type[_T],
+        filters: _Optional[_FilterType] = None,
+        optional_filters: _Optional[_FilterType] = None,
+        relationship_options: _Optional[
+            _Dict[_InstrumentedAttribute[_Any], _RelationshipOption]
         ] = None,
-        group_by: Optional[ColumnExpressionArgument[Any]] = None,
-        order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[Union[List[str], str]] = None,
-        limit: Optional[int] = None,
-    ) -> Sequence[_T]:
+        group_by: _Optional[_ColumnExpressionArgument[_Any]] = None,
+        order_by: _Optional[_Union[_List[str], str]] = None,
+        direction: _Optional[_Union[_List[str], str]] = None,
+        limit: _Optional[int] = None,
+    ) -> _Sequence[_T]:
         """
         Selects all objects from the database using a custom statement.
 
@@ -263,21 +269,21 @@ class AsyncRepository:
 
     async def _select_paginate(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
+        model: _Type[_T],
         page: int,
         per_page: int,
-        distinct: Optional[ColumnExpressionArgument[Any]] = None,
-        filters: Optional[FilterType] = None,
-        optional_filters: Optional[FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute[Any], RelationshipOption]
+        distinct: _Optional[_ColumnExpressionArgument[_Any]] = None,
+        filters: _Optional[_FilterType] = None,
+        optional_filters: _Optional[_FilterType] = None,
+        relationship_options: _Optional[
+            _Dict[_InstrumentedAttribute[_Any], _RelationshipOption]
         ] = None,
-        order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[Union[List[str], str]] = None,
-        limit: Optional[int] = None,
-    ) -> Tuple[Sequence[_T], str]:
+        order_by: _Optional[_Union[_List[str], str]] = None,
+        direction: _Optional[_Union[_List[str], str]] = None,
+        limit: _Optional[int] = None,
+    ) -> _Tuple[_Sequence[_T], str]:
         """
         Selects a paginated set of objects from the database.
 
@@ -319,22 +325,22 @@ class AsyncRepository:
 
     async def _select_paginate_stmt(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        stmt: Select[Tuple[_T]],
-        model: Type[_T],
+        stmt: _Select[_Tuple[_T]],
+        model: _Type[_T],
         page: int,
         per_page: int,
-        filters: Optional[FilterType] = None,
-        optional_filters: Optional[FilterType] = None,
-        relationship_options: Optional[
-            Dict[InstrumentedAttribute[Any], RelationshipOption]
+        filters: _Optional[_FilterType] = None,
+        optional_filters: _Optional[_FilterType] = None,
+        relationship_options: _Optional[
+            _Dict[_InstrumentedAttribute[_Any], _RelationshipOption]
         ] = None,
-        group_by: Optional[ColumnExpressionArgument[Any]] = None,
-        order_by: Optional[Union[List[str], str]] = None,
-        direction: Optional[Union[List[str], str]] = None,
-        limit: Optional[int] = None,
-    ) -> Tuple[Sequence[_T], str]:
+        group_by: _Optional[_ColumnExpressionArgument[_Any]] = None,
+        order_by: _Optional[_Union[_List[str], str]] = None,
+        direction: _Optional[_Union[_List[str], str]] = None,
+        limit: _Optional[int] = None,
+    ) -> _Tuple[_Sequence[_T], str]:
         """
         Selects a paginated set of rows from the database using a custom statement.
 
@@ -382,14 +388,14 @@ class AsyncRepository:
     @_check_values(as_list=False)
     async def _update_all(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        values: Dict[str, Any],
-        filters: Optional[FilterType] = None,
+        model: _Type[_T],
+        values: _Dict[str, _Any],
+        filters: _Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
-    ) -> Sequence[_T]:
+    ) -> _Sequence[_T]:
         """
         Updates multiple objects in the database.
 
@@ -427,14 +433,14 @@ class AsyncRepository:
     @_check_values(as_list=False)
     async def _update(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        values: Dict[str, Any],
-        filters: Optional[FilterType] = None,
+        model: _Type[_T],
+        values: _Dict[str, _Any],
+        filters: _Optional[_FilterType] = None,
         flush: bool = False,
         commit: bool = False,
-    ) -> Optional[_T]:
+    ) -> _Optional[_T]:
         """
         Updates a single object in the database.
 
@@ -474,13 +480,13 @@ class AsyncRepository:
     @_check_values(as_list=True)
     async def _add_all(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        values: List[Dict[str, Any]],
+        model: _Type[_T],
+        values: _List[_Dict[str, _Any]],
         flush: bool = False,
         commit: bool = False,
-    ) -> Sequence[_T]:
+    ) -> _Sequence[_T]:
         """
         Adds multiple objects to the database.
 
@@ -514,10 +520,10 @@ class AsyncRepository:
     @_check_values(as_list=False)
     async def _add(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        values: Dict[str, Any],
+        model: _Type[_T],
+        values: _Dict[str, _Any],
         flush: bool = False,
         commit: bool = False,
     ) -> _T:
@@ -553,10 +559,10 @@ class AsyncRepository:
 
     async def _delete_all(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        filters: FilterType,
+        model: _Type[_T],
+        filters: _FilterType,
         flush: bool = True,
         commit: bool = False,
     ) -> bool:
@@ -594,10 +600,10 @@ class AsyncRepository:
 
     async def _delete(
         self,
-        __session__: AsyncSession,
+        __session__: _AsyncSession,
         /,
-        model: Type[_T],
-        filters: FilterType,
+        model: _Type[_T],
+        filters: _FilterType,
         flush: bool = True,
         commit: bool = False,
     ) -> bool:

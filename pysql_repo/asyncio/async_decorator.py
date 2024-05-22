@@ -1,18 +1,24 @@
 # MODULES
-import functools
-from typing import Any, Callable, Coroutine, ParamSpec, TypeVar
+from typing import (
+    Any as _Any,
+    Callable as _Callable,
+    Coroutine as _Coroutine,
+    ParamSpec as _ParamSpec,
+    TypeVar as _TypeVar,
+)
 
 # SQLALCHEMY
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 
-_P = ParamSpec("_P")
-_T = TypeVar("_T")
+_P = _ParamSpec("_P")
+_T = _TypeVar("_T")
 
 
 def with_async_session(
     param_session: str = "session",
-) -> Callable[
-    [Callable[_P, Coroutine[Any, Any, _T]]], Callable[_P, Coroutine[Any, Any, _T]]
+) -> _Callable[
+    [_Callable[_P, _Coroutine[_Any, _Any, _T]]],
+    _Callable[_P, _Coroutine[_Any, _Any, _T]],
 ]:
     """
     Decorator that provides an async session to the decorated method.
@@ -31,10 +37,9 @@ def with_async_session(
     """
 
     def decorator(
-        func: Callable[_P, Coroutine[Any, Any, _T]]
-    ) -> Callable[_P, Coroutine[Any, Any, _T]]:
+        func: _Callable[_P, _Coroutine[_Any, _Any, _T]]
+    ) -> _Callable[_P, _Coroutine[_Any, _Any, _T]]:
 
-        @functools.wraps(func)
         async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _T:
             self = kwargs.get("self")
             if not isinstance(self, (AsyncRepository, AsyncService)):
@@ -48,9 +53,9 @@ def with_async_session(
                 async with self.session_manager() as session:
                     kwargs[param_session] = session
                     return await func(*args, **kwargs)
-            elif not isinstance(session, AsyncSession):
+            elif not isinstance(session, _AsyncSession):
                 raise TypeError(
-                    f"{param_session} must be instance of {AsyncSession.__name__}"
+                    f"{param_session} must be instance of {_AsyncSession.__name__}"
                 )
 
             return await func(*args, **kwargs)

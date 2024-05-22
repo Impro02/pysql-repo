@@ -1,20 +1,31 @@
 # MODULES
-import logging
-from typing import Any, AsyncGenerator, List, Optional, Type
-from pathlib import Path
+import logging as _logging
+from typing import (
+    Any as _Any,
+    AsyncGenerator as _AsyncGenerator,
+    List as _List,
+    Optional as _Optional,
+    Type as _Type,
+)
+from pathlib import Path as _Path
 
 # SQLALCHEMY
-from sqlalchemy import text, MetaData, Connection, Table
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.inspection import inspect
+from sqlalchemy import (
+    text as _text,
+    MetaData as _MetaData,
+    Connection as _Connection,
+    Table as _Table,
+)
+from sqlalchemy.orm import DeclarativeBase as _DeclarativeBase
+from sqlalchemy.inspection import inspect as _inspect
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    async_sessionmaker,
-    AsyncSession,
+    create_async_engine as _create_async_engine,
+    async_sessionmaker as _async_sessionmaker,
+    AsyncSession as _AsyncSession,
 )
 
 # CONTEXTLIB
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager as _asynccontextmanager
 
 # UTILS
 from pysql_repo._database_base import (
@@ -22,7 +33,7 @@ from pysql_repo._database_base import (
     DataBaseConfigTypedDict as _DataBaseConfigTypedDict,
 )
 
-_logger = logging.getLogger("pysql_repo.async_database")
+_logger = _logging.getLogger("pysql_repo.async_database")
 
 
 class AsyncDataBase(_DataBase):
@@ -53,8 +64,8 @@ class AsyncDataBase(_DataBase):
     def __init__(
         self,
         databases_config: _DataBaseConfigTypedDict,
-        base: Type[DeclarativeBase],
-        metadata_views: Optional[List[MetaData]] = None,
+        base: _Type[_DeclarativeBase],
+        metadata_views: _Optional[_List[_MetaData]] = None,
         autoflush: bool = False,
         expire_on_commit: bool = False,
         echo: bool = False,
@@ -75,13 +86,13 @@ class AsyncDataBase(_DataBase):
 
         assert self._connection_string is not None, "Connection string is required."
 
-        self._engine = create_async_engine(
+        self._engine = _create_async_engine(
             self._connection_string,
             echo=echo,
             connect_args=self._connect_args,
         )
 
-        self._session_factory = async_sessionmaker(
+        self._session_factory = _async_sessionmaker(
             bind=self._engine,
             autoflush=autoflush,
             expire_on_commit=expire_on_commit,
@@ -98,8 +109,8 @@ class AsyncDataBase(_DataBase):
             Exception: If an error occurs during the database creation process.
         """
 
-        def inspect_view_names(conn: Connection) -> List[str]:
-            inspector = inspect(conn)
+        def inspect_view_names(conn: _Connection) -> _List[str]:
+            inspector = _inspect(conn)
 
             return [item.lower() for item in inspector.get_view_names()]
 
@@ -109,13 +120,13 @@ class AsyncDataBase(_DataBase):
         async with self.session_factory() as session:
             for view in self.views:
                 if view.key.lower() in current_view_names:
-                    await session.execute(text(f"DROP VIEW {view}"))
+                    await session.execute(_text(f"DROP VIEW {view}"))
 
         async with self._engine.begin() as conn:
             await conn.run_sync(self._base.metadata.create_all)
 
-    @asynccontextmanager
-    async def session_factory(self) -> AsyncGenerator[AsyncSession, Any]:
+    @_asynccontextmanager
+    async def session_factory(self) -> _AsyncGenerator[_AsyncSession, _Any]:
         """
         Context manager for creating an async session.
 
@@ -137,10 +148,10 @@ class AsyncDataBase(_DataBase):
 
     async def init_tables_from_json_files(
         self,
-        directory: Path,
-        table_names: List[str],
+        directory: _Path,
+        table_names: _List[str],
         timezone: str = "CET",
-    ) -> List[Table]:
+    ) -> _List[_Table]:
         """
         Initializes tables in the database by inserting data from JSON files.
 

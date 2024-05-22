@@ -1,17 +1,19 @@
 # MODULES
-import json
-from pathlib import Path
-from typing import Any, Dict, List, Union, cast
-
-
-from typing import List, Dict, Union
-from pathlib import Path
-import json
+import json as _json
+from pathlib import Path as _Path
+from typing import (
+    Any as _Any,
+    Dict as _Dict,
+    List as _List,
+    Union as _Union,
+    cast as _cast,
+)
 
 
 def open_json_file(
-    path: Path, encoding: str = "utf-8"
-) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    path: _Path,
+    encoding: str = "utf-8",
+) -> _Union[_List[_Dict[str, _Any]], _Dict[str, _Any]]:
     """
     Opens a JSON file and returns its contents as a Python object.
 
@@ -33,12 +35,15 @@ def open_json_file(
         raise FileExistsError(f"Path {path} is not a file")
 
     with open(path, encoding=encoding) as json_file:
-        raw_data = json.load(json_file)
+        raw_data = _json.load(json_file)
 
-    return cast(Union[List[Dict[str, Any]], Dict[str, Any]], raw_data)
+    return _cast(_Union[_List[_Dict[str, _Any]], _Dict[str, _Any]], raw_data)
 
 
-def open_file(path: Path, encoding: str = "utf-8") -> bytes:
+def open_file(
+    path: _Path,
+    encoding: str = "utf-8",
+) -> bytes:
     """
     Opens a file at the given path and returns its content as bytes.
 
@@ -67,8 +72,8 @@ def open_file(path: Path, encoding: str = "utf-8") -> bytes:
 
 
 def save_json_file(
-    path: Path,
-    data: Any,
+    path: _Path,
+    data: _Any,
     encoding: str = "utf-8",
 ) -> None:
     """
@@ -83,11 +88,11 @@ def save_json_file(
         return
 
     with open(path, "w", encoding=encoding) as file:
-        file.write(json.dumps(data))
+        file.write(_json.dumps(data))
 
 
 def save_file(
-    path: Path,
+    path: _Path,
     data: bytes,
     encoding: str = "utf-8",
     new_line: str = "\n",

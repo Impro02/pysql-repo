@@ -4,9 +4,12 @@ import time
 from typing import Any, Tuple
 
 # SQLALCHEMY
-from sqlalchemy import Engine, event
-from sqlalchemy.engine import Connection, ExecutionContext
-from sqlalchemy.engine.interfaces import DBAPICursor
+from sqlalchemy import Engine as _Engine, event as _event
+from sqlalchemy.engine import (
+    Connection as _Connection,
+    ExecutionContext as _ExecutionContext,
+)
+from sqlalchemy.engine.interfaces import DBAPICursor as _DBAPICursor
 
 # PYSQL_REPO
 from pysql_repo._database import DataBase as DataBase
@@ -28,26 +31,26 @@ _logger = logging.getLogger("pysql_repo.cursor")
 _logger.setLevel(logging.INFO)
 
 
-@event.listens_for(Engine, "before_cursor_execute")
+@_event.listens_for(_Engine, "before_cursor_execute")
 def before_cursor_execute(
-    conn: Connection,
-    cursor: DBAPICursor,
+    conn: _Connection,
+    cursor: _DBAPICursor,
     statement: str,
     parameters: Tuple[Any],
-    context: ExecutionContext,
+    context: _ExecutionContext,
     executemany: bool,
 ) -> None:
     conn.info.setdefault("query_start_time", []).append(time.perf_counter())
     _logger.debug("Start Query: %s, {%s}", statement, parameters)
 
 
-@event.listens_for(Engine, "after_cursor_execute")
+@_event.listens_for(_Engine, "after_cursor_execute")
 def after_cursor_execute(
-    conn: Connection,
-    cursor: DBAPICursor,
+    conn: _Connection,
+    cursor: _DBAPICursor,
     statement: str,
     parameters: Tuple[Any],
-    context: ExecutionContext,
+    context: _ExecutionContext,
     executemany: bool,
 ) -> None:
     total = time.perf_counter() - conn.info["query_start_time"].pop(-1)
