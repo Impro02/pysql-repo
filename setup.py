@@ -1,6 +1,6 @@
 from setuptools import setup
 
-version = "0.7.1"
+version = "0.7.2"
 
 with open("requirements.txt") as f:
     required_packages = f.read().splitlines()
@@ -31,4 +31,5 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     package_data={"pysql_repo": ["py.typed"]},
+    include_package_data=True,
 )
