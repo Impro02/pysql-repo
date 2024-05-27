@@ -54,7 +54,7 @@ from sqlalchemy.sql.elements import Null, BinaryExpression
 from pysql_repo._constants.enum import LoadingTechnique, Operators
 
 FilterType: TypeAlias = Dict[
-    Union[InstrumentedAttribute[Any], Tuple[InstrumentedAttribute[Any]]], Any
+    Union[InstrumentedAttribute[Any], Tuple[InstrumentedAttribute[Any], ...]], Any
 ]
 
 _T = TypeVar("_T", bound=DeclarativeBase)
@@ -510,6 +510,10 @@ def get_conditions_from_dict(
         List[ColumnExpressionArgument]: A list of SQLAlchemy conditions.
 
     """
+
+    def is_value_null(value: Any) -> bool:
+        return value is None or isinstance(value, Null)
+
     conditions = []
     for key, value in values.items():
         if type(value) is set:
@@ -523,37 +527,37 @@ def get_conditions_from_dict(
                     case Operators.EQUAL:
                         conditions.append(key == v)
                     case Operators.IEQUAL:
-                        if not isinstance(v, Null):
+                        if not is_value_null(v):
                             conditions.append(func.lower(key) == func.lower(v))
                         else:
                             conditions.append(key == v)
                     case Operators.DIFFERENT:
                         conditions.append(key != v)
                     case Operators.IDIFFERENT:
-                        if not isinstance(v, Null):
+                        if not is_value_null(v):
                             conditions.append(func.lower(key) != func.lower(v))
                         else:
                             conditions.append(key != v)
                     case Operators.LIKE:
-                        if not isinstance(v, Null):
+                        if not is_value_null(v):
                             if isinstance(key, InstrumentedAttribute):
                                 conditions.append(key.like(v))
                         else:
                             conditions.append(key == v)
                     case Operators.NOT_LIKE:
-                        if not isinstance(v, Null):
+                        if not is_value_null(v):
                             if isinstance(key, InstrumentedAttribute):
                                 conditions.append(~key.like(v))
                         else:
                             conditions.append(key != v)
                     case Operators.ILIKE:
-                        if not isinstance(v, Null):
+                        if not is_value_null(v):
                             if isinstance(key, InstrumentedAttribute):
                                 conditions.append(key.ilike(v))
                         else:
                             conditions.append(key == v)
                     case Operators.NOT_ILIKE:
-                        if not isinstance(v, Null):
+                        if not is_value_null(v):
                             if isinstance(key, InstrumentedAttribute):
                                 conditions.append(~key.ilike(v))
                         else:
@@ -592,11 +596,7 @@ def get_conditions_from_dict(
                             conditions.append(
                                 tuple_(*(func.lower(key_) for key_ in key)).in_(
                                     [
-                                        (
-                                            func.lower(v_)
-                                            if not isinstance(v_, Null)
-                                            else v_
-                                        )
+                                        func.lower(v_) if not is_value_null(v) else v_
                                         for v_ in v
                                     ]
                                 )
@@ -605,11 +605,7 @@ def get_conditions_from_dict(
                             conditions.append(
                                 func.lower(key).in_(
                                     [
-                                        (
-                                            func.lower(v_)
-                                            if not isinstance(v_, Null)
-                                            else v_
-                                        )
+                                        func.lower(v_) if not is_value_null(v) else v_
                                         for v_ in v
                                     ]
                                 )
@@ -627,11 +623,7 @@ def get_conditions_from_dict(
                             conditions.append(
                                 tuple_(*(func.lower(key_) for key_ in key)).notin_(
                                     [
-                                        (
-                                            func.lower(v_)
-                                            if not isinstance(v_, Null)
-                                            else v_
-                                        )
+                                        func.lower(v_) if not is_value_null(v) else v_
                                         for v_ in v
                                     ]
                                 )
@@ -640,11 +632,7 @@ def get_conditions_from_dict(
                             conditions.append(
                                 func.lower(key).notin_(
                                     [
-                                        (
-                                            func.lower(v_)
-                                            if not isinstance(v_, Null)
-                                            else v_
-                                        )
+                                        func.lower(v_) if not is_value_null(v) else v_
                                         for v_ in v
                                     ]
                                 )
