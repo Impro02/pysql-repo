@@ -19,6 +19,7 @@ from contextlib import AbstractAsyncContextManager as _AbstractAsyncContextManag
 from sqlalchemy import (
     ColumnExpressionArgument as _ColumnExpressionArgument,
     Select as _Select,
+    update,
 )
 from sqlalchemy.ext.asyncio import AsyncSession as _AsyncSession
 from sqlalchemy.orm import (
@@ -384,6 +385,34 @@ class AsyncRepository:
         result = await __session__.execute(stmt)
 
         return result.unique().scalars().all(), pagination
+
+    @_check_values(as_list=True)
+    async def _bulk_update(
+        self,
+        __session__: _AsyncSession,
+        /,
+        model: _Type[_T],
+        values: _List[_Dict[str, _Any]],
+        flush: bool = False,
+        commit: bool = False,
+    ) -> None:
+        """
+        Updates multiple objects in the database.
+
+        Args:
+            __session__: The session to use.
+            model: The model class representing the table.
+            values: A list of dictionaries containing column-value pairs for each object.
+            flush: Whether to flush the session after the update.
+            commit: Whether to commit the session after the update.
+
+        """
+        await __session__.execute(update(model), values)
+
+        if flush:
+            await __session__.flush()
+        if commit:
+            await __session__.commit()
 
     @_check_values(as_list=False)
     async def _update_all(

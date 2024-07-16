@@ -16,7 +16,7 @@ from typing import (
 from contextlib import AbstractContextManager
 
 # SQLALCHEMY
-from sqlalchemy import ColumnExpressionArgument, Select
+from sqlalchemy import ColumnExpressionArgument, Select, update
 from sqlalchemy.orm import DeclarativeBase, Session, InstrumentedAttribute, Session
 
 # DECORATORS
@@ -365,6 +365,34 @@ class Repository:
         )
 
         return __session__.execute(stmt).unique().scalars().all(), pagination
+
+    @_check_values(as_list=True)
+    def _bulk_update(
+        self,
+        __session__: Session,
+        /,
+        model: Type[_T],
+        values: List[Dict[str, Any]],
+        flush: bool = False,
+        commit: bool = False,
+    ) -> None:
+        """
+        Updates multiple objects in the database.
+
+        Args:
+            __session__: The session to use.
+            model: The model class representing the table.
+            values: A list of dictionaries containing column-value pairs for each object.
+            flush: Whether to flush the session after the update.
+            commit: Whether to commit the session after the update.
+
+        """
+        __session__.execute(update(model), values)
+
+        if flush:
+            __session__.flush()
+        if commit:
+            __session__.commit()
 
     @_check_values(as_list=False)
     def _update_all(
