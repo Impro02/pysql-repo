@@ -676,7 +676,7 @@ class TestCreateUsers(IsolatedAsyncioTestCase):
         )
 
 
-class TestPathUser(IsolatedAsyncioTestCase):
+class TestPatchUser(IsolatedAsyncioTestCase):
     @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
     async def test_patch_email(
         self,
@@ -704,7 +704,38 @@ class TestPathUser(IsolatedAsyncioTestCase):
         )
 
 
-class TestPathUsers(IsolatedAsyncioTestCase):
+class TestBulkPatchUsers(IsolatedAsyncioTestCase):
+
+    @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
+    async def test_bulk_patch_email(
+        self,
+        expected_data: Union[Dict[str, Any], List[Dict[str, Any]]],
+        saved_path: Path,
+    ) -> None:
+        # GIVEN
+        data = [
+            (1, "foo@test.com"),
+            (3, "bar@test.com"),
+        ]
+
+        # WHEN
+        async with self._database.session_factory() as session:
+            users = await self._user_service.bulk_patch_email(
+                session,
+                data=data,
+            )
+        users_dict = [user.model_dump() for user in users]
+
+        save_json_file(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestPatchUsers(IsolatedAsyncioTestCase):
     @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
     async def test_patch_disable(
         self,

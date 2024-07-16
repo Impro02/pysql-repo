@@ -196,6 +196,20 @@ class UserService(Service[UserRepository]):
 
         return UserRead.model_validate(user)
 
+    def bulk_patch_email(
+        self,
+        __session__: Session,
+        /,
+        data: List[Tuple[int, str]],
+    ) -> List[UserRead]:
+        users = self._repository.bulk_patch_email(
+            __session__,
+            data=data,
+            flush=True,
+        )
+
+        return [UserRead.model_validate(user) for user in users]
+
     def patch_disable(
         self,
         __session__: Session,

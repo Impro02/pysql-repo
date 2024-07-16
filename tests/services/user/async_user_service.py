@@ -196,6 +196,20 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
 
         return UserRead.model_validate(user)
 
+    async def bulk_patch_email(
+        self,
+        __session__: AsyncSession,
+        /,
+        data: List[Tuple[int, str]],
+    ) -> List[UserRead]:
+        users = await self._repository.bulk_patch_email(
+            __session__,
+            data=data,
+            flush=True,
+        )
+
+        return [UserRead.model_validate(user) for user in users]
+
     async def patch_disable(
         self,
         __session__: AsyncSession,

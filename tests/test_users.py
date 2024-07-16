@@ -702,7 +702,7 @@ class TestCreateUsers(TestCase):
         )
 
 
-class TestPathUser(TestCase):
+class TestPatchUser(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
     def test_patch_email(
         self,
@@ -730,7 +730,37 @@ class TestPathUser(TestCase):
         )
 
 
-class TestPathUsers(TestCase):
+class TestBulkPatchUsers(TestCase):
+    @load_expected_data(SavedPath.PATH_ASSET_USERS)
+    def test_bulk_patch_email(
+        self,
+        expected_data: Union[Dict[str, Any], List[Dict[str, Any]]],
+        saved_path: Path,
+    ) -> None:
+        # GIVEN
+        data = [
+            (1, "foo@test.com"),
+            (3, "bar@test.com"),
+        ]
+
+        # WHEN
+        with self._database.session_factory() as session:
+            users = self._user_service.bulk_patch_email(
+                session,
+                data=data,
+            )
+        users_dict = [user.model_dump() for user in users]
+
+        save_json_file(saved_path, users_dict)
+
+        # THEN
+        self.assertEqual(
+            expected_data,
+            users_dict,
+        )
+
+
+class TestPatchUsers(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
     def test_patch_disable(
         self,

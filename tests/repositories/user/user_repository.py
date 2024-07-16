@@ -237,6 +237,38 @@ class UserRepository(Repository, _UserRepositoryBase):
 
         return user
 
+    def bulk_patch_email(
+        self,
+        __session__: Session,
+        /,
+        data: List[Tuple[int, str]],
+        flush: bool = False,
+        commit: bool = True,
+    ) -> Sequence[User]:
+        self._bulk_update(
+            __session__,
+            model=User,
+            values=[
+                {
+                    User.id.key: id,
+                    User.email.key: email,
+                }
+                for id, email in data
+            ],
+            flush=flush,
+            commit=commit,
+        )
+
+        return self._select_all(
+            __session__,
+            model=User,
+            filters={
+                User.id: {
+                    Operators.IN: [id for id, _ in data],
+                },
+            },
+        )
+
     def patch_disable(
         self,
         __session__: Session,

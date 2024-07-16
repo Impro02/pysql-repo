@@ -239,6 +239,38 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
         return user
 
+    async def bulk_patch_email(
+        self,
+        __session__: AsyncSession,
+        /,
+        data: List[Tuple[int, str]],
+        flush: bool = False,
+        commit: bool = True,
+    ) -> Sequence[User]:
+        await self._bulk_update(
+            __session__,
+            model=User,
+            values=[
+                {
+                    User.id.key: id,
+                    User.email.key: email,
+                }
+                for id, email in data
+            ],
+            flush=flush,
+            commit=commit,
+        )
+
+        return await self._select_all(
+            __session__,
+            model=User,
+            filters={
+                User.id: {
+                    Operators.IN: [id for id, _ in data],
+                },
+            },
+        )
+
     async def patch_disable(
         self,
         __session__: AsyncSession,
