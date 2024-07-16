@@ -17,6 +17,7 @@ from pysql_repo import Database, Repository, Service, with_session, Operators, L
 ```
 
 To access pysql-repo and its asyncio functions import it in your Python code like this:
+
 ```
 from pysql_repo.asyncio import AsyncDatabase, AsyncRepository, AsyncService, with_async_session
 ```
@@ -282,17 +283,18 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def get_all(
         self,
-        session: Session,
+        __session__: Session,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -306,7 +308,7 @@ class UserRepository(Repository, _UserRepositoryBase):
         direction: Optional[List[str]] = None,
     ) -> Sequence[User]:
         users = self._select_all(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -341,7 +343,8 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def get_paginate(
         self,
-        session: Session,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -350,10 +353,10 @@ class UserRepository(Repository, _UserRepositoryBase):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -367,7 +370,7 @@ class UserRepository(Repository, _UserRepositoryBase):
         direction: Optional[List[str]] = None,
     ) -> Tuple[Sequence[User], str]:
         users, pagination = self._select_paginate(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -404,11 +407,11 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def get_by_id(
         self,
-        session: Session,
+        __session__: Session,
         id: int,
     ) -> Optional[User]:
         user = self._select(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -421,13 +424,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def create(
         self,
+        __session__: Session,
+        /,
         data: UserCreate,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> User:
         user = self._add(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: data.email,
@@ -442,13 +446,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def create_all(
         self,
+        __session__: Session,
+        /,
         data: List[UserCreate],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> Sequence[User]:
         users = self._add_all(
-            session=session,
+            __session__,
             model=User,
             values=[
                 {
@@ -466,14 +471,15 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def patch_email(
         self,
+        __session__: Session,
+        /,
         id: int,
         email: str,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
-    ) -> User:
+    ) -> Optional[User]:
         user = self._update(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: email,
@@ -489,15 +495,48 @@ class UserRepository(Repository, _UserRepositoryBase):
 
         return user
 
+    def bulk_patch_email(
+        self,
+        __session__: Session,
+        /,
+        data: List[Tuple[int, str]],
+        flush: bool = False,
+        commit: bool = True,
+    ) -> Sequence[User]:
+        self._bulk_update(
+            __session__,
+            model=User,
+            values=[
+                {
+                    User.id.key: id,
+                    User.email.key: email,
+                }
+                for id, email in data
+            ],
+            flush=flush,
+            commit=commit,
+        )
+
+        return self._select_all(
+            __session__,
+            model=User,
+            filters={
+                User.id: {
+                    Operators.IN: [id for id, _ in data],
+                },
+            },
+        )
+
     def patch_disable(
         self,
+        __session__: Session,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
-    ) -> List[User]:
+    ) -> Sequence[User]:
         users = self._update_all(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.is_active.key: False,
@@ -515,13 +554,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def delete(
         self,
+        __session__: Session,
+        /,
         id: int,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> bool:
         is_deleted = self._delete(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -536,13 +576,14 @@ class UserRepository(Repository, _UserRepositoryBase):
 
     def delete_all(
         self,
+        __session__: Session,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[Session] = None,
     ) -> bool:
         is_deleted = self._delete_all(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -587,19 +628,20 @@ class UserService(Service[UserRepository]):
         )
         self._logger = logger
 
-    @with_session()
     def get_users(
         self,
+        __session__: Session,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -611,9 +653,9 @@ class UserService(Service[UserRepository]):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[Session] = None,
     ) -> List[UserRead]:
         users = self._repository.get_all(
+            __session__,
             ids_in=ids_in,
             ids_not_in=ids_not_in,
             emails_iin=emails_iin,
@@ -635,14 +677,14 @@ class UserService(Service[UserRepository]):
             load_city=load_city,
             order_by=order_by,
             direction=direction,
-            session=session,
         )
 
         return [UserRead.model_validate(item) for item in users]
 
-    @with_session()
     def get_users_paginate(
         self,
+        __session__: Session,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -651,10 +693,10 @@ class UserService(Service[UserRepository]):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -666,9 +708,9 @@ class UserService(Service[UserRepository]):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[Session] = None,
     ) -> Tuple[List[UserRead], str]:
         users, pagination = self._repository.get_paginate(
+            __session__,
             page=page,
             per_page=per_page,
             ids_in=ids_in,
@@ -692,22 +734,19 @@ class UserService(Service[UserRepository]):
             load_city=load_city,
             order_by=order_by,
             direction=direction,
-            session=session,
         )
 
-        users = [UserRead.model_validate(item) for item in users]
+        return [UserRead.model_validate(item) for item in users], pagination
 
-        return users, pagination
-
-    @with_session()
     def get_user_by_id(
         self,
+        __session__: Session,
+        /,
         id: int,
-        session: Optional[Session] = None,
-    ) -> UserRead:
+    ) -> Optional[UserRead]:
         user = self._repository.get_by_id(
+            __session__,
             id=id,
-            session=session,
         )
 
         if user is None:
@@ -715,88 +754,103 @@ class UserService(Service[UserRepository]):
 
         return UserRead.model_validate(user)
 
-    @with_session()
     def create_user(
         self,
+        __session__: Session,
+        /,
         data: UserCreate,
-        session: Optional[Session] = None,
     ) -> UserRead:
         user = self._repository.create(
+            __session__,
             data=data,
             flush=True,
-            session=session,
         )
 
         return UserRead.model_validate(user)
 
-    @with_session()
     def create_users(
         self,
+        __session__: Session,
+        /,
         data: List[UserCreate],
-        session: Optional[Session] = None,
     ) -> List[UserRead]:
         users = self._repository.create_all(
+            __session__,
             data=data,
             flush=True,
-            session=session,
         )
 
         return [UserRead.model_validate(user) for user in users]
 
-    @with_session()
     def patch_email(
         self,
+        __session__: Session,
+        /,
         id: int,
         email: str,
-        session: Optional[Session] = None,
     ) -> UserRead:
         user = self._repository.patch_email(
+            __session__,
             id=id,
             email=email,
             flush=True,
-            session=session,
         )
 
         return UserRead.model_validate(user)
 
-    @with_session()
-    def patch_disable(
+    def bulk_patch_email(
         self,
-        ids: List[int],
-        session: Optional[Session] = None,
+        __session__: Session,
+        /,
+        data: List[Tuple[int, str]],
     ) -> List[UserRead]:
-        users = self._repository.patch_disable(
-            ids=ids,
+        users = self._repository.bulk_patch_email(
+            __session__,
+            data=data,
             flush=True,
-            session=session,
         )
 
         return [UserRead.model_validate(user) for user in users]
 
-    @with_session()
-    def delete_by_id(
+    def patch_disable(
         self,
-        id: int,
-        session: Optional[Session] = None,
-    ) -> bool:
-        return self._repository.delete(
-            id=id,
-            flush=True,
-            session=session,
-        )
-
-    @with_session()
-    def delete_by_ids(
-        self,
+        __session__: Session,
+        /,
         ids: List[int],
-        session: Optional[Session] = None,
-    ) -> bool:
-        return self._repository.delete_all(
+    ) -> List[UserRead]:
+        users = self._repository.patch_disable(
+            __session__,
             ids=ids,
             flush=True,
-            session=session,
+        )
+
+        return [UserRead.model_validate(user) for user in users]
+
+    def delete_by_id(
+        self,
+        __session__: Session,
+        /,
+        id: int,
+    ) -> bool:
+        return self._repository.delete(
+            __session__,
+            id=id,
+            flush=True,
+        )
+
+    def delete_by_ids(
+        self,
+        __session__: Session,
+        /,
+        ids: List[int],
+    ) -> bool:
+        return self._repository.delete_all(
+            __session__,
+            ids=ids,
+            flush=True,
         )
 ```
+
 To create an instance of AsyncDatabase and generate an instance of AsyncSession from the factory:
 
 ```
@@ -819,7 +873,7 @@ async with database.session_factory() as session:
     await session.execute(...)
 ```
 
-To create an  async repository, you just have to inherit your class from AsyncRepository.
+To create an async repository, you just have to inherit your class from AsyncRepository.
 
 ```
 # MODULES
@@ -851,16 +905,18 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def get_all(
         self,
+        __session__: AsyncSession,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -872,10 +928,9 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[AsyncSession] = None,
     ) -> Sequence[User]:
         users = await self._select_all(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -910,6 +965,8 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def get_paginate(
         self,
+        __session__: AsyncSession,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -918,10 +975,10 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -933,10 +990,9 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[AsyncSession] = None,
     ) -> Tuple[Sequence[User], str]:
         users, pagination = await self._select_paginate(
-            session=session,
+            __session__,
             model=User,
             optional_filters=self.get_filters(
                 ids_in=ids_in,
@@ -973,11 +1029,12 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def get_by_id(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
-        session: Optional[AsyncSession] = None,
     ) -> Optional[User]:
         user = await self._select(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -990,13 +1047,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def create(
         self,
+        __session__: AsyncSession,
+        /,
         data: UserCreate,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> User:
         user = await self._add(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: data.email,
@@ -1011,13 +1069,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def create_all(
         self,
+        __session__: AsyncSession,
+        /,
         data: List[UserCreate],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> Sequence[User]:
         users = await self._add_all(
-            session=session,
+            __session__,
             model=User,
             values=[
                 {
@@ -1035,14 +1094,15 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def patch_email(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
         email: str,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
-    ) -> User:
+    ) -> Optional[User]:
         user = await self._update(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.email.key: email,
@@ -1058,15 +1118,48 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
         return user
 
+    async def bulk_patch_email(
+        self,
+        __session__: AsyncSession,
+        /,
+        data: List[Tuple[int, str]],
+        flush: bool = False,
+        commit: bool = True,
+    ) -> Sequence[User]:
+        await self._bulk_update(
+            __session__,
+            model=User,
+            values=[
+                {
+                    User.id.key: id,
+                    User.email.key: email,
+                }
+                for id, email in data
+            ],
+            flush=flush,
+            commit=commit,
+        )
+
+        return await self._select_all(
+            __session__,
+            model=User,
+            filters={
+                User.id: {
+                    Operators.IN: [id for id, _ in data],
+                },
+            },
+        )
+
     async def patch_disable(
         self,
+        __session__: AsyncSession,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
-    ) -> List[User]:
+    ) -> Sequence[User]:
         users = await self._update_all(
-            session=session,
+            __session__,
             model=User,
             values={
                 User.is_active.key: False,
@@ -1084,13 +1177,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def delete(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> bool:
         is_deleted = await self._delete(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -1105,13 +1199,14 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
     async def delete_all(
         self,
+        __session__: AsyncSession,
+        /,
         ids: List[int],
         flush: bool = False,
         commit: bool = True,
-        session: Optional[AsyncSession] = None,
     ) -> bool:
         is_deleted = await self._delete_all(
-            session=session,
+            __session__,
             model=User,
             filters={
                 User.id: {
@@ -1124,6 +1219,7 @@ class AsyncUserRepository(AsyncRepository, _UserRepositoryBase):
 
         return is_deleted
 ```
+
 To create an async service, you just have to inherit your class from AsyncService.
 
 ```
@@ -1155,20 +1251,20 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
         )
         self._logger = logger
 
-    @with_async_session()
     async def get_users(
         self,
-        session: Optional[AsyncSession] = None,
+        __session__: AsyncSession,
+        /,
         ids_in: Optional[List[int]] = None,
         ids_not_in: Optional[List[int]] = None,
         emails_iin: Optional[List[str]] = None,
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -1182,6 +1278,7 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
         direction: Optional[List[str]] = None,
     ) -> List[UserRead]:
         users = await self._repository.get_all(
+            __session__,
             ids_in=ids_in,
             ids_not_in=ids_not_in,
             emails_iin=emails_iin,
@@ -1203,14 +1300,14 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
             load_city=load_city,
             order_by=order_by,
             direction=direction,
-            session=session,
         )
 
         return [UserRead.model_validate(item) for item in users]
 
-    @with_async_session()
     async def get_users_paginate(
         self,
+        __session__: AsyncSession,
+        /,
         page: int,
         per_page: int,
         ids_in: Optional[List[int]] = None,
@@ -1219,10 +1316,10 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
         emails_in: Optional[List[str]] = None,
         emails_not_iin: Optional[List[str]] = None,
         emails_not_in: Optional[List[str]] = None,
-        email_ilike: Optional[List[str]] = None,
-        email_like: Optional[List[str]] = None,
-        email_not_ilike: Optional[List[str]] = None,
-        email_not_like: Optional[List[str]] = None,
+        email_ilike: Optional[str] = None,
+        email_like: Optional[str] = None,
+        email_not_ilike: Optional[str] = None,
+        email_not_like: Optional[str] = None,
         email_equal: Optional[str] = None,
         email_iequal: Optional[str] = None,
         email_different: Optional[str] = None,
@@ -1234,9 +1331,9 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
         load_city: bool = True,
         order_by: Optional[List[str]] = None,
         direction: Optional[List[str]] = None,
-        session: Optional[AsyncSession] = None,
     ) -> Tuple[List[UserRead], str]:
         users, pagination = await self._repository.get_paginate(
+            __session__,
             page=page,
             per_page=per_page,
             ids_in=ids_in,
@@ -1260,22 +1357,19 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
             load_city=load_city,
             order_by=order_by,
             direction=direction,
-            session=session,
         )
 
-        users = [UserRead.model_validate(item) for item in users]
+        return [UserRead.model_validate(item) for item in users], pagination
 
-        return users, pagination
-
-    @with_async_session()
     async def get_user_by_id(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
-        session: Optional[AsyncSession] = None,
-    ) -> UserRead:
+    ) -> Optional[UserRead]:
         user = await self._repository.get_by_id(
+            __session__,
             id=id,
-            session=session,
         )
 
         if user is None:
@@ -1283,85 +1377,100 @@ class AsyncUserService(AsyncService[AsyncUserRepository]):
 
         return UserRead.model_validate(user)
 
-    @with_async_session()
     async def create_user(
         self,
+        __session__: AsyncSession,
+        /,
         data: UserCreate,
-        session: Optional[AsyncSession] = None,
     ) -> UserRead:
         user = await self._repository.create(
+            __session__,
             data=data,
             flush=True,
-            session=session,
         )
 
         return UserRead.model_validate(user)
 
-    @with_async_session()
     async def create_users(
         self,
+        __session__: AsyncSession,
+        /,
         data: List[UserCreate],
-        session: Optional[AsyncSession] = None,
     ) -> List[UserRead]:
         users = await self._repository.create_all(
+            __session__,
             data=data,
             flush=True,
-            session=session,
         )
 
         return [UserRead.model_validate(user) for user in users]
 
-    @with_async_session()
     async def patch_email(
         self,
+        __session__: AsyncSession,
+        /,
         id: int,
         email: str,
-        session: Optional[AsyncSession] = None,
     ) -> UserRead:
         user = await self._repository.patch_email(
+            __session__,
             id=id,
             email=email,
             flush=True,
-            session=session,
         )
 
         return UserRead.model_validate(user)
 
-    @with_async_session()
-    async def patch_disable(
+    async def bulk_patch_email(
         self,
-        ids: List[int],
-        session: Optional[AsyncSession] = None,
+        __session__: AsyncSession,
+        /,
+        data: List[Tuple[int, str]],
     ) -> List[UserRead]:
-        users = await self._repository.patch_disable(
-            ids=ids,
+        users = await self._repository.bulk_patch_email(
+            __session__,
+            data=data,
             flush=True,
-            session=session,
         )
 
         return [UserRead.model_validate(user) for user in users]
 
-    @with_async_session()
-    async def delete_by_id(
+    async def patch_disable(
         self,
-        id: int,
-        session: Optional[AsyncSession] = None,
-    ) -> bool:
-        return await self._repository.delete(
-            id=id,
-            flush=True,
-            session=session,
-        )
-
-    @with_async_session()
-    async def delete_by_ids(
-        self,
+        __session__: AsyncSession,
+        /,
         ids: List[int],
-        session: Optional[AsyncSession] = None,
-    ) -> bool:
-        return await self._repository.delete_all(
+    ) -> List[UserRead]:
+        users = await self._repository.patch_disable(
+            __session__,
             ids=ids,
             flush=True,
-            session=session,
         )
+
+        return [UserRead.model_validate(user) for user in users]
+
+    async def delete_by_id(
+        self,
+        __session__: AsyncSession,
+        /,
+        id: int,
+    ) -> bool:
+        return await self._repository.delete(
+            __session__,
+            id=id,
+            flush=True,
+        )
+
+    async def delete_by_ids(
+        self,
+        __session__: AsyncSession,
+        /,
+        ids: List[int],
+    ) -> bool:
+        return await self._repository.delete_all(
+            __session__,
+            ids=ids,
+            flush=True,
+        )
+
 ```
