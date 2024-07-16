@@ -704,7 +704,7 @@ class TestCreateUsers(TestCase):
 
 class TestPathUser(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
-    def test_path_email(
+    def test_patch_email(
         self,
         expected_data: Union[Dict[str, Any], List[Dict[str, Any]]],
         saved_path: Path,
@@ -732,7 +732,7 @@ class TestPathUser(TestCase):
 
 class TestPathUsers(TestCase):
     @load_expected_data(SavedPath.PATH_ASSET_USERS)
-    def test_path_disable(
+    def test_patch_disable(
         self,
         expected_data: Union[Dict[str, Any], List[Dict[str, Any]]],
         saved_path: Path,

@@ -678,7 +678,7 @@ class TestCreateUsers(IsolatedAsyncioTestCase):
 
 class TestPathUser(IsolatedAsyncioTestCase):
     @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
-    async def test_path_email(
+    async def test_patch_email(
         self,
         expected_data: Union[Dict[str, Any], List[Dict[str, Any]]],
         saved_path: Path,
@@ -706,7 +706,7 @@ class TestPathUser(IsolatedAsyncioTestCase):
 
 class TestPathUsers(IsolatedAsyncioTestCase):
     @async_load_expected_data(SavedPath.PATH_ASSET_USERS)
-    async def test_path_disable(
+    async def test_patch_disable(
         self,
         expected_data: Union[Dict[str, Any], List[Dict[str, Any]]],
         saved_path: Path,
